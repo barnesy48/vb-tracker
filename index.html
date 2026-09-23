@@ -142,7 +142,7 @@
     }
 
     // ── Save modal ─────────────────────────────────────────────────────────────
-    function SaveModal({ open, gamesCount, setsPlayed, setSetsPlayed, gameLabel, setGameLabel, onSave, onClose }) {
+    function SaveModal({ open, gamesCount, setsPlayed, setSetsPlayed, gameLabel, setGameLabel, gameDate, setGameDate, onSave, onClose }) {
       if (!open) return null;
       return React.createElement("div", { style: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.72)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }, onClick: onClose },
         React.createElement("div", { style: { background: "#1a2b1e", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 16, padding: 26, width: "100%", maxWidth: 360 }, onClick: e => e.stopPropagation() },
@@ -154,7 +154,14 @@
               ...SETS.map(n => React.createElement("button", { key: n, onClick: () => setSetsPlayed(n), style: { flex: 1, background: setsPlayed === n ? ACCENT : "transparent", border: "1px solid " + (setsPlayed === n ? ACCENT : "rgba(255,255,255,0.2)"), borderRadius: 7, color: setsPlayed === n ? "#1a1a2e" : "rgba(255,255,255,0.5)", fontFamily: "'Bebas Neue',sans-serif", fontSize: 16, padding: "8px" } }, "SET " + n))
             )
           ),
-          React.createElement("input", { value: gameLabel, onChange: e => setGameLabel(e.target.value), onKeyDown: e => e.key === "Enter" && onSave(), placeholder: "Game " + (gamesCount + 1) + " (or enter opponent name)", autoFocus: true, style: { width: "100%", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 10, color: "#fff", fontSize: 14, padding: "10px 14px", fontFamily: "'DM Sans',sans-serif", marginBottom: 14 } }),
+          React.createElement("div", { style: { marginBottom: 14 } },
+            React.createElement("div", { style: { fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 6 } }, "Opponent"),
+            React.createElement("input", { value: gameLabel, onChange: e => setGameLabel(e.target.value), onKeyDown: e => e.key === "Enter" && onSave(), placeholder: "Opponent name (e.g. Lincoln MS)", autoFocus: true, style: { width: "100%", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 10, color: "#fff", fontSize: 14, padding: "10px 14px", fontFamily: "'DM Sans',sans-serif" } })
+          ),
+          React.createElement("div", { style: { marginBottom: 14 } },
+            React.createElement("div", { style: { fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 6 } }, "Game date"),
+            React.createElement("input", { type: "date", value: gameDate, onChange: e => setGameDate(e.target.value), style: { width: "100%", background: "rgba(255,255,255,0.07)", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 10, color: "#fff", fontSize: 14, padding: "10px 14px", fontFamily: "'DM Sans',sans-serif", colorScheme: "dark" } })
+          ),
           React.createElement("div", { style: { display: "flex", gap: 9 } },
             React.createElement("button", { onClick: onClose, style: { flex: 1, background: "transparent", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 9, color: "rgba(255,255,255,0.5)", fontSize: 13, padding: 10, fontFamily: "'DM Sans',sans-serif" } }, "Cancel"),
             React.createElement("button", { onClick: onSave, style: { flex: 2, background: ACCENT, border: "none", borderRadius: 9, color: "#1a1a2e", fontSize: 14, fontWeight: 700, padding: 10, fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1.5 } }, "SAVE GAME")
@@ -469,6 +476,7 @@
       const [nameInput,    setNameInput]    = useState("");
       const [saveOpen,     setSaveOpen]     = useState(false);
       const [gameLabel,    setGameLabel]    = useState("");
+      const [gameDate,     setGameDate]     = useState("");
       const [setsPlayed,   setSetsPlayed]   = useState(3);
       const [toast,        setToast]        = useState(null);
       const [confirmModal, setConfirmModal] = useState(null);
@@ -558,13 +566,14 @@
 
       const saveGame = () => {
         const label = gameLabel.trim() || ("Game " + (games.length + 1));
-        const date  = new Date().toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
+        const dateObj = gameDate ? new Date(gameDate + "T12:00:00") : new Date();
+        const date  = dateObj.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
         const snap  = players.map(p => ({ name: p.name, sets: JSON.parse(JSON.stringify(p.sets)) }));
         const newGames = [...games, { id: Date.now(), label, date, setsPlayed, players: snap }];
         setGames(newGames); persist("vb-games-v2", newGames);
         setPlayers(prev => prev.map(p => newPlayer(p.name)));
         setCurrentSet(1); setLastAction(null);
-        setSaveOpen(false); setGameLabel(""); setSetsPlayed(3);
+        setSaveOpen(false); setGameLabel(""); setGameDate(""); setSetsPlayed(3);
         showToast("✓ \"" + label + "\" saved");
       };
 
@@ -589,7 +598,7 @@
       return React.createElement("div", { style: { minHeight: "100vh", background: BG, fontFamily: "'DM Sans',sans-serif", color: "#fff", paddingBottom: 60 } },
         toast ? React.createElement("div", { style: { position: "fixed", top: 65, left: "50%", transform: "translateX(-50%)", background: GREEN, color: "#0d1b2a", borderRadius: 10, padding: "9px 18px", fontWeight: 700, fontSize: 13, zIndex: 999, boxShadow: "0 4px 18px rgba(0,0,0,0.4)", whiteSpace: "nowrap" } }, toast) : null,
         React.createElement(ConfirmModal, { modal: confirmModal, onConfirm: () => { confirmModal.onConfirm(); setConfirmModal(null); }, onCancel: () => setConfirmModal(null) }),
-        React.createElement(SaveModal, { open: saveOpen, gamesCount: games.length, setsPlayed, setSetsPlayed, gameLabel, setGameLabel, onSave: saveGame, onClose: () => setSaveOpen(false) }),
+        React.createElement(SaveModal, { open: saveOpen, gamesCount: games.length, setsPlayed, setSetsPlayed, gameLabel, setGameLabel, gameDate, setGameDate, onSave: saveGame, onClose: () => setSaveOpen(false) }),
         React.createElement(GameDetailModal, { game: selectedGame, onClose: () => setSelectedGame(null), onDelete: () => deleteGame(selectedGame.id) }),
 
         // Header
@@ -598,7 +607,7 @@
             React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 } },
               React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, letterSpacing: 3, color: ACCENT, lineHeight: 1 } }, "🏐 VB TRACKER"),
               React.createElement("div", { style: { display: "flex", gap: 7 } },
-                view === "track" && hasData ? React.createElement("button", { onClick: () => setSaveOpen(true), style: { background: ACCENT, border: "none", borderRadius: 8, color: "#1a1a2e", fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1.5, fontSize: 12, padding: "7px 13px" } }, "SAVE GAME") : null,
+                view === "track" && hasData ? React.createElement("button", { onClick: () => { const today = new Date(); const y = today.getFullYear(); const m = String(today.getMonth()+1).padStart(2,"0"); const d = String(today.getDate()).padStart(2,"0"); setGameDate(y+"-"+m+"-"+d); setSaveOpen(true); }, style: { background: ACCENT, border: "none", borderRadius: 8, color: "#1a1a2e", fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1.5, fontSize: 12, padding: "7px 13px" } }, "SAVE GAME") : null,
                 React.createElement("button", { onClick: () => setRosterOpen(v => !v), style: { background: rosterOpen ? "rgba(255,255,255,0.12)" : "transparent", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 8, color: "rgba(255,255,255,0.6)", fontSize: 12, padding: "7px 11px", fontFamily: "'DM Sans',sans-serif" } }, rosterOpen ? "Done" : "✏️ Roster")
               )
             ),
