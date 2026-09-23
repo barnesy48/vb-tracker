@@ -12,8 +12,8 @@
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; background: #f0f4ff; }
-    body { -webkit-font-smoothing: antialiased; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); color: #1e1b4b; }
+    html, body { height: 100%; background: #f5f5f5; }
+    body { -webkit-font-smoothing: antialiased; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); color: #111; }
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-thumb { background: rgba(0,0,0,0.15); border-radius: 4px; }
     input::placeholder { color: rgba(0,0,0,0.3); }
@@ -47,22 +47,22 @@
     ];
     const ALL_STATS = [...POSITIVES, ...ERRORS];
     const PLAYER_GRADIENTS = [
-      "linear-gradient(135deg,#a855f7,#6366f1)",
-      "linear-gradient(135deg,#0ea5e9,#6366f1)",
-      "linear-gradient(135deg,#10b981,#0ea5e9)",
-      "linear-gradient(135deg,#f59e0b,#f97316)",
-      "linear-gradient(135deg,#ec4899,#a855f7)",
-      "linear-gradient(135deg,#f97316,#ef4444)",
-      "linear-gradient(135deg,#8b5cf6,#0ea5e9)",
-      "linear-gradient(135deg,#10b981,#8b5cf6)",
-      "linear-gradient(135deg,#f59e0b,#10b981)",
-      "linear-gradient(135deg,#ef4444,#ec4899)",
-      "linear-gradient(135deg,#0ea5e9,#f59e0b)",
-      "linear-gradient(135deg,#a855f7,#ec4899)",
+      "linear-gradient(135deg,#111,#444)",
+      "linear-gradient(135deg,#333,#111)",
+      "linear-gradient(135deg,#222,#555)",
+      "linear-gradient(135deg,#444,#111)",
+      "linear-gradient(135deg,#111,#333)",
+      "linear-gradient(135deg,#555,#222)",
+      "linear-gradient(135deg,#222,#444)",
+      "linear-gradient(135deg,#333,#555)",
+      "linear-gradient(135deg,#444,#222)",
+      "linear-gradient(135deg,#111,#555)",
+      "linear-gradient(135deg,#555,#333)",
+      "linear-gradient(135deg,#222,#111)",
     ];
-    const ACCENT = "#7c3aed";
+    const ACCENT = "#111";
     const GREEN  = "#16a34a";
-    const BG     = "linear-gradient(160deg,#f0f4ff 0%,#faf5ff 50%,#f0f4ff 100%)";
+    const BG     = "#f5f5f5";
     const SETS   = [1, 2, 3, 4, 5];
 
     const emptyPos     = () => ({ kills: 0, aces: 0, digs: 0 });
@@ -117,7 +117,7 @@
       },
         React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 20, color, lineHeight: 1.1 } }, value),
         React.createElement("div", { style: { fontSize: 9, color: color, marginTop: 1, fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 0.5 } }, label),
-        sub != null ? React.createElement("div", { style: { fontSize: 8, color: "rgba(255,255,255,0.22)" } }, sub) : null
+        sub != null ? React.createElement("div", { style: { fontSize: 8, color: "rgba(0,0,0,0.3)" } }, sub) : null
       );
     }
 
@@ -145,9 +145,9 @@
     function ConfirmModal({ modal, onConfirm, onCancel }) {
       if (!modal) return null;
       return React.createElement("div", { style: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.78)", zIndex: 700, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 } },
-        React.createElement("div", { style: { background: "#fff", border: "1px solid rgba(124,58,237,0.15)", borderRadius: 16, padding: 26, width: "100%", maxWidth: 320, textAlign: "center", boxShadow: "0 8px 32px rgba(0,0,0,0.12)" } },
+        React.createElement("div", { style: { background: "#fff", border: "1px solid rgba(0,0,0,0.15)", borderRadius: 16, padding: 26, width: "100%", maxWidth: 320, textAlign: "center", boxShadow: "0 8px 32px rgba(0,0,0,0.12)" } },
           React.createElement("div", { style: { fontSize: 26, marginBottom: 12 } }, "⚠️"),
-          React.createElement("div", { style: { fontSize: 14, color: "#1e1b4b", lineHeight: 1.5, marginBottom: 20 } }, modal.message),
+          React.createElement("div", { style: { fontSize: 14, color: "#111", lineHeight: 1.5, marginBottom: 20 } }, modal.message),
           React.createElement("div", { style: { display: "flex", gap: 10 } },
             React.createElement("button", { onClick: onCancel, style: { flex: 1, background: "transparent", border: "1px solid rgba(0,0,0,0.15)", borderRadius: 9, color: "rgba(0,0,0,0.5)", fontSize: 13, padding: 10, fontFamily: "'DM Sans',sans-serif", fontWeight: 700 } }, "Cancel"),
             React.createElement("button", { onClick: onConfirm, style: { flex: 1, background: ERR_COLOR, border: "none", borderRadius: 9, color: "#fff", fontSize: 13, fontWeight: 700, padding: 10, fontFamily: "'DM Sans',sans-serif" } }, "Confirm")
@@ -160,22 +160,22 @@
     function SaveModal({ open, gamesCount, setsPlayed, setSetsPlayed, gameLabel, setGameLabel, gameDate, setGameDate, onSave, onClose }) {
       if (!open) return null;
       return React.createElement("div", { style: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.72)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }, onClick: onClose },
-        React.createElement("div", { style: { background: "#fff", border: "1px solid rgba(124,58,237,0.15)", borderRadius: 16, padding: 26, width: "100%", maxWidth: 360, boxShadow: "0 8px 32px rgba(0,0,0,0.12)" }, onClick: e => e.stopPropagation() },
+        React.createElement("div", { style: { background: "#fff", border: "1px solid rgba(0,0,0,0.15)", borderRadius: 16, padding: 26, width: "100%", maxWidth: 360, boxShadow: "0 8px 32px rgba(0,0,0,0.12)" }, onClick: e => e.stopPropagation() },
           React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 20, letterSpacing: 2, marginBottom: 6, color: ACCENT } }, "SAVE GAME TO SEASON"),
           React.createElement("div", { style: { fontSize: 11, color: "rgba(0,0,0,0.4)", marginBottom: 14 } }, "Stats will be saved and the tracker reset for the next game."),
           React.createElement("div", { style: { marginBottom: 14 } },
             React.createElement("div", { style: { fontSize: 11, color: "rgba(0,0,0,0.4)", marginBottom: 6 } }, "How many sets were played?"),
             React.createElement("div", { style: { display: "flex", gap: 6 } },
-              ...SETS.map(n => React.createElement("button", { key: n, onClick: () => setSetsPlayed(n), style: { flex: 1, background: setsPlayed === n ? ACCENT : "#f0f4ff", border: "1px solid " + (setsPlayed === n ? ACCENT : "rgba(0,0,0,0.12)"), borderRadius: 7, color: setsPlayed === n ? "#fff" : "rgba(0,0,0,0.45)", fontFamily: "'Bebas Neue',sans-serif", fontSize: 14, padding: "7px 2px" } }, n))
+              ...SETS.map(n => React.createElement("button", { key: n, onClick: () => setSetsPlayed(n), style: { flex: 1, background: setsPlayed === n ? ACCENT : "#f5f5f5", border: "1px solid " + (setsPlayed === n ? ACCENT : "rgba(0,0,0,0.12)"), borderRadius: 7, color: setsPlayed === n ? "#fff" : "rgba(0,0,0,0.45)", fontFamily: "'Bebas Neue',sans-serif", fontSize: 14, padding: "7px 2px" } }, n))
             )
           ),
           React.createElement("div", { style: { marginBottom: 14 } },
             React.createElement("div", { style: { fontSize: 11, color: "rgba(0,0,0,0.4)", marginBottom: 6 } }, "Opponent"),
-            React.createElement("input", { value: gameLabel, onChange: e => setGameLabel(e.target.value), onKeyDown: e => e.key === "Enter" && onSave(), placeholder: "Opponent name (e.g. Lincoln MS)", autoFocus: true, style: { width: "100%", background: "#f8f9ff", border: "1px solid rgba(124,58,237,0.2)", borderRadius: 10, color: "#1e1b4b", fontSize: 14, padding: "10px 14px", fontFamily: "'DM Sans',sans-serif" } })
+            React.createElement("input", { value: gameLabel, onChange: e => setGameLabel(e.target.value), onKeyDown: e => e.key === "Enter" && onSave(), placeholder: "Opponent name (e.g. Lincoln MS)", autoFocus: true, style: { width: "100%", background: "#f0f0f0", border: "1px solid rgba(0,0,0,0.15)", borderRadius: 10, color: "#111", fontSize: 14, padding: "10px 14px", fontFamily: "'DM Sans',sans-serif" } })
           ),
           React.createElement("div", { style: { marginBottom: 14 } },
             React.createElement("div", { style: { fontSize: 11, color: "rgba(0,0,0,0.4)", marginBottom: 6 } }, "Game date"),
-            React.createElement("input", { type: "date", value: gameDate, onChange: e => setGameDate(e.target.value), style: { width: "100%", background: "#f8f9ff", border: "1px solid rgba(124,58,237,0.2)", borderRadius: 10, color: "#1e1b4b", fontSize: 14, padding: "10px 14px", fontFamily: "'DM Sans',sans-serif", colorScheme: "light" } })
+            React.createElement("input", { type: "date", value: gameDate, onChange: e => setGameDate(e.target.value), style: { width: "100%", background: "#f0f0f0", border: "1px solid rgba(0,0,0,0.15)", borderRadius: 10, color: "#111", fontSize: 14, padding: "10px 14px", fontFamily: "'DM Sans',sans-serif", colorScheme: "light" } })
           ),
           React.createElement("div", { style: { display: "flex", gap: 9 } },
             React.createElement("button", { onClick: onClose, style: { flex: 1, background: "transparent", border: "1px solid rgba(0,0,0,0.15)", borderRadius: 9, color: "rgba(0,0,0,0.45)", fontSize: 13, padding: 10, fontFamily: "'DM Sans',sans-serif" } }, "Cancel"),
@@ -196,7 +196,7 @@
       };
 
       return React.createElement("div", { style: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.82)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center", padding: 16, overflowY: "auto" }, onClick: onClose },
-        React.createElement("div", { style: { background: "#fff", border: "1px solid rgba(124,58,237,0.15)", borderRadius: 16, padding: 22, width: "100%", maxWidth: 420, boxShadow: "0 8px 32px rgba(0,0,0,0.12)" }, onClick: e => e.stopPropagation() },
+        React.createElement("div", { style: { background: "#fff", border: "1px solid rgba(0,0,0,0.15)", borderRadius: 16, padding: 22, width: "100%", maxWidth: 420, boxShadow: "0 8px 32px rgba(0,0,0,0.12)" }, onClick: e => e.stopPropagation() },
           React.createElement("div", { style: { display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 14 } },
             React.createElement("div", null,
               React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 20, letterSpacing: 2, color: ACCENT } }, game.label),
@@ -205,14 +205,14 @@
             React.createElement("button", { onClick: onClose, style: { background: "transparent", border: "none", color: "rgba(0,0,0,0.3)", fontSize: 18 } }, "✕")
           ),
           React.createElement("div", { style: { display: "flex", gap: 5, marginBottom: 14 } },
-            ...["all", 1, 2, 3, 4, 5].map(s => React.createElement("button", { key: s, onClick: () => setSv(s), style: { flex: 1, background: sv === s ? ACCENT : "#f0f4ff", border: "1px solid " + (sv === s ? ACCENT : "rgba(0,0,0,0.1)"), borderRadius: 6, color: sv === s ? "#fff" : "rgba(0,0,0,0.4)", fontFamily: "'Bebas Neue',sans-serif", fontSize: 10, padding: "5px 1px" } }, s === "all" ? "ALL" : "S" + s))
+            ...["all", 1, 2, 3, 4, 5].map(s => React.createElement("button", { key: s, onClick: () => setSv(s), style: { flex: 1, background: sv === s ? ACCENT : "#f5f5f5", border: "1px solid " + (sv === s ? ACCENT : "rgba(0,0,0,0.1)"), borderRadius: 6, color: sv === s ? "#fff" : "rgba(0,0,0,0.4)", fontFamily: "'Bebas Neue',sans-serif", fontSize: 10, padding: "5px 1px" } }, s === "all" ? "ALL" : "S" + s))
           ),
           React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 7 } },
             ...game.players.map(p => {
               const d = calc(p);
-              return React.createElement("div", { key: p.name, style: { background: "#f8f9ff", borderRadius: 9, padding: "9px 11px" } },
+              return React.createElement("div", { key: p.name, style: { background: "#f0f0f0", borderRadius: 9, padding: "9px 11px" } },
                 React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 5 } },
-                  React.createElement("span", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 15, letterSpacing: 1, color: "#1e1b4b" } }, p.name),
+                  React.createElement("span", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 15, letterSpacing: 1, color: "#111" } }, p.name),
                   React.createElement(NetBadge, { pos: d.pos, err: d.err })
                 ),
                 React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 3 } },
@@ -224,6 +224,13 @@
               );
             })
           ),
+          game.scoreLog && game.scoreLog.length > 0 ? React.createElement("div", { style: { marginTop: 16 } },
+            React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 } },
+              React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 11, letterSpacing: 2, color: "rgba(0,0,0,0.35)" } }, "COURT TIME · " + game.scoreLog.length + " PTS"),
+              React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, color: game.scoreUs > game.scoreThem ? GREEN : game.scoreUs < game.scoreThem ? ERR_COLOR : "#111" } }, game.scoreUs + " — " + game.scoreThem)
+            ),
+            React.createElement(CourtTimePanel, { scoreLog: game.scoreLog, players: game.players.map(p => ({ name: p.name, id: p.name })) })
+          ) : null,
           React.createElement("button", { onClick: onDelete, style: { marginTop: 16, width: "100%", background: "rgba(220,38,38,0.06)", border: "1px solid rgba(220,38,38,0.25)", borderRadius: 9, color: ERR_COLOR, fontSize: 12, padding: 9, fontFamily: "'DM Sans',sans-serif" } }, "Delete this game")
         )
       );
@@ -284,7 +291,7 @@
           React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 5, paddingRight: 4 } },
             React.createElement("div", { style: { width: 24, height: 24, borderRadius: "50%", background: grad, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Bebas Neue',sans-serif", fontSize: 12, color: "#fff", flexShrink: 0 } }, p.name.charAt(0).toUpperCase()),
             React.createElement("div", { style: { minWidth: 0 } },
-              React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 12, letterSpacing: 0.5, lineHeight: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: "#1e1b4b" } }, p.name),
+              React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 12, letterSpacing: 0.5, lineHeight: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis", color: "#111" } }, p.name),
               React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 11, color: netColor, lineHeight: 1, marginTop: 1 } }, (net > 0 ? "+" : "") + net)
             )
           ),
@@ -292,7 +299,7 @@
         );
       });
 
-      return React.createElement("div", { style: { background: "#fff", border: "1px solid rgba(124,58,237,0.15)", borderRadius: 14, padding: "10px 8px 8px", boxShadow: "0 2px 12px rgba(124,58,237,0.08)" } },
+      return React.createElement("div", { style: { background: "#fff", border: "1px solid rgba(0,0,0,0.15)", borderRadius: 14, padding: "10px 8px 8px", boxShadow: "0 2px 12px rgba(0,0,0,0.06)" } },
         headerRow,
         ...playerRows,
         lastAction ? React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8, paddingTop: 4, borderTop: "1px solid rgba(0,0,0,0.06)", marginTop: 2 } },
@@ -320,7 +327,7 @@
 
       return React.createElement("div", null,
         React.createElement("div", { style: { display: "flex", gap: 6, marginBottom: 16 } },
-          ...["all", 1, 2, 3, 4, 5].map(s => React.createElement("button", { key: s, onClick: () => setSv(s), style: { flex: 1, background: sv === s ? ACCENT : "#f0f4ff", border: "1px solid " + (sv === s ? ACCENT : "rgba(0,0,0,0.1)"), borderRadius: 7, color: sv === s ? "#fff" : "rgba(0,0,0,0.4)", fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 0, fontSize: 11, padding: "6px 2px" } }, s === "all" ? "ALL" : "SET " + s))
+          ...["all", 1, 2, 3, 4, 5].map(s => React.createElement("button", { key: s, onClick: () => setSv(s), style: { flex: 1, background: sv === s ? ACCENT : "#f5f5f5", border: "1px solid " + (sv === s ? ACCENT : "rgba(0,0,0,0.1)"), borderRadius: 7, color: sv === s ? "#fff" : "rgba(0,0,0,0.4)", fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 0, fontSize: 11, padding: "6px 2px" } }, s === "all" ? "ALL" : "SET " + s))
         ),
         // Totals tiles
         React.createElement("div", { style: { display: "flex", gap: 6, marginBottom: 18, flexWrap: "wrap" } },
@@ -333,10 +340,10 @@
             const st = getStats(p);
             const net = netScore(st.pos, st.err);
             const netColor = net > 0 ? GREEN : net < 0 ? ERR_COLOR : "rgba(0,0,0,0.25)";
-            return React.createElement("div", { key: p.id, style: { background: "#f8f9ff", border: "1px solid rgba(124,58,237,0.1)", borderRadius: 10, padding: "10px 12px" } },
+            return React.createElement("div", { key: p.id, style: { background: "#f0f0f0", border: "1px solid rgba(0,0,0,0.1)", borderRadius: 10, padding: "10px 12px" } },
               React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 6 } },
                 React.createElement("span", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 13, color: "rgba(0,0,0,0.25)", minWidth: 18 } }, "#" + (i + 1)),
-                React.createElement("span", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 15, letterSpacing: 1, flex: 1, color: "#1e1b4b" } }, p.name),
+                React.createElement("span", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 15, letterSpacing: 1, flex: 1, color: "#111" } }, p.name),
                 React.createElement("span", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 20, color: netColor } }, (net > 0 ? "+" : "") + net)
               ),
               React.createElement("div", { style: { display: "flex", gap: 8, flexWrap: "wrap", marginBottom: 3 } },
@@ -409,9 +416,9 @@
         ),
         // Filter chips
         React.createElement("div", { style: { display: "flex", gap: 5, marginBottom: 14, flexWrap: "wrap" } },
-          React.createElement("button", { onClick: () => setFilterKey("net"), style: { background: filterKey === "net" ? GREEN + "20" : "#f0f4ff", border: "1px solid " + (filterKey === "net" ? GREEN : "rgba(0,0,0,0.1)"), borderRadius: 6, color: filterKey === "net" ? GREEN : "rgba(0,0,0,0.4)", fontFamily: "'Bebas Neue',sans-serif", fontSize: 10, letterSpacing: 1, padding: "4px 10px" } }, "NET SCORE"),
-          ...POSITIVES.map(t => React.createElement("button", { key: t.key, onClick: () => setFilterKey(t.key), style: { background: filterKey === t.key ? POS_COLOR + "20" : "#f0f4ff", border: "1px solid " + (filterKey === t.key ? POS_COLOR : "rgba(0,0,0,0.1)"), borderRadius: 6, color: filterKey === t.key ? POS_COLOR : "rgba(0,0,0,0.35)", fontFamily: "'Bebas Neue',sans-serif", fontSize: 10, letterSpacing: 1, padding: "4px 8px" } }, t.label.toUpperCase())),
-          ...ERRORS.map(t => React.createElement("button", { key: t.key, onClick: () => setFilterKey(t.key), style: { background: filterKey === t.key ? ERR_COLOR + "18" : "#f0f4ff", border: "1px solid " + (filterKey === t.key ? ERR_COLOR : "rgba(0,0,0,0.1)"), borderRadius: 6, color: filterKey === t.key ? ERR_COLOR : "rgba(0,0,0,0.35)", fontFamily: "'Bebas Neue',sans-serif", fontSize: 10, letterSpacing: 1, padding: "4px 8px" } }, t.label.toUpperCase()))
+          React.createElement("button", { onClick: () => setFilterKey("net"), style: { background: filterKey === "net" ? GREEN + "20" : "#f5f5f5", border: "1px solid " + (filterKey === "net" ? GREEN : "rgba(0,0,0,0.1)"), borderRadius: 6, color: filterKey === "net" ? GREEN : "rgba(0,0,0,0.4)", fontFamily: "'Bebas Neue',sans-serif", fontSize: 10, letterSpacing: 1, padding: "4px 10px" } }, "NET SCORE"),
+          ...POSITIVES.map(t => React.createElement("button", { key: t.key, onClick: () => setFilterKey(t.key), style: { background: filterKey === t.key ? POS_COLOR + "20" : "#f5f5f5", border: "1px solid " + (filterKey === t.key ? POS_COLOR : "rgba(0,0,0,0.1)"), borderRadius: 6, color: filterKey === t.key ? POS_COLOR : "rgba(0,0,0,0.35)", fontFamily: "'Bebas Neue',sans-serif", fontSize: 10, letterSpacing: 1, padding: "4px 8px" } }, t.label.toUpperCase())),
+          ...ERRORS.map(t => React.createElement("button", { key: t.key, onClick: () => setFilterKey(t.key), style: { background: filterKey === t.key ? ERR_COLOR + "18" : "#f5f5f5", border: "1px solid " + (filterKey === t.key ? ERR_COLOR : "rgba(0,0,0,0.1)"), borderRadius: 6, color: filterKey === t.key ? ERR_COLOR : "rgba(0,0,0,0.35)", fontFamily: "'Bebas Neue',sans-serif", fontSize: 10, letterSpacing: 1, padding: "4px 8px" } }, t.label.toUpperCase()))
         ),
         React.createElement(SL, null, "SEASON RANKINGS · " + filterKey.toUpperCase()),
         React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 8 } },
@@ -419,10 +426,10 @@
             const metric = getMetric(p);
             const trend = getTrend(p);
             const mColor = filterKey === "net" ? (metric >= 0 ? GREEN : "#f87171") : filterColor;
-            return React.createElement("div", { key: p.name, style: { background: "#f8f9ff", border: "1px solid rgba(124,58,237,0.1)", borderRadius: 12, padding: "11px 13px" } },
+            return React.createElement("div", { key: p.name, style: { background: "#f0f0f0", border: "1px solid rgba(0,0,0,0.1)", borderRadius: 12, padding: "11px 13px" } },
               React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 6 } },
                 React.createElement("span", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 14, color: i === 0 ? ACCENT : "rgba(0,0,0,0.25)", minWidth: 20 } }, "#" + (i + 1)),
-                React.createElement("span", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 15, letterSpacing: 1, flex: 1, color: "#1e1b4b" } }, p.name),
+                React.createElement("span", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 15, letterSpacing: 1, flex: 1, color: "#111" } }, p.name),
                 React.createElement("span", { style: { fontSize: 10, color: "rgba(0,0,0,0.25)", marginRight: 4 } }, p.games + "g"),
                 React.createElement("span", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, color: mColor } }, (filterKey === "net" && metric > 0 ? "+" : "") + metric)
               ),
@@ -443,7 +450,7 @@
     }
 
     // ── Trends view ───────────────────────────────────────────────────────────
-    const LINE_COLORS = ["#7c3aed","#0ea5e9","#16a34a","#f59e0b","#ec4899","#f97316","#06b6d4","#8b5cf6","#10b981","#ef4444","#6366f1","#84cc16"];
+    const LINE_COLORS = ["#111","#555","#888","#333","#666","#999","#222","#444","#777","#000","#3a3a3a","#5a5a5a"];
 
     function TrendsView({ games }) {
       const [metric, setMetric] = useState("net");
@@ -507,12 +514,12 @@
         React.createElement("div", { style: { display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 14 } },
           ...metricChips.map(c => React.createElement("button", {
             key: c.key, onClick: () => setMetric(c.key),
-            style: { background: metric === c.key ? c.color + "18" : "#f0f4ff", border: "1px solid " + (metric === c.key ? c.color : "rgba(0,0,0,0.1)"), borderRadius: 6, color: metric === c.key ? c.color : "rgba(0,0,0,0.4)", fontFamily: "'Bebas Neue',sans-serif", fontSize: 10, letterSpacing: 1, padding: "4px 10px" }
+            style: { background: metric === c.key ? c.color + "18" : "#f5f5f5", border: "1px solid " + (metric === c.key ? c.color : "rgba(0,0,0,0.1)"), borderRadius: 6, color: metric === c.key ? c.color : "rgba(0,0,0,0.4)", fontFamily: "'Bebas Neue',sans-serif", fontSize: 10, letterSpacing: 1, padding: "4px 10px" }
           }, c.label))
         ),
 
         // SVG chart
-        React.createElement("div", { style: { background: "#fff", border: "1px solid rgba(124,58,237,0.12)", borderRadius: 14, padding: "12px 8px 8px", boxShadow: "0 2px 12px rgba(124,58,237,0.06)", overflowX: "auto" } },
+        React.createElement("div", { style: { background: "#fff", border: "1px solid rgba(0,0,0,0.12)", borderRadius: 14, padding: "12px 8px 8px", boxShadow: "0 2px 12px rgba(0,0,0,0.04)", overflowX: "auto" } },
           React.createElement("svg", { viewBox: "0 0 " + W + " " + H, style: { width: "100%", display: "block", minWidth: Math.max(W, N * 40) } },
             // Grid lines
             ...gridLines.map(({ v, y }) => React.createElement("g", { key: v },
@@ -538,7 +545,7 @@
         React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: "6px 14px", marginTop: 12, padding: "0 4px" } },
           ...allPlayers.map(p => React.createElement("div", { key: p.name, style: { display: "flex", alignItems: "center", gap: 5 } },
             React.createElement("div", { style: { width: 20, height: 3, borderRadius: 2, background: p.color, flexShrink: 0 } }),
-            React.createElement("span", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 12, letterSpacing: 0.5, color: "#1e1b4b" } }, p.name)
+            React.createElement("span", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 12, letterSpacing: 0.5, color: "#111" } }, p.name)
           ))
         ),
 
@@ -552,9 +559,9 @@
               const avg = recent.reduce((s, v) => s + v, 0) / recent.length;
               const trend = recent.length > 1 ? recent[recent.length-1] - recent[0] : 0;
               const tColor = metric === "net" ? (trend > 0 ? POS_COLOR : trend < 0 ? ERR_COLOR : "rgba(0,0,0,0.3)") : (trend >= 0 ? POS_COLOR : ERR_COLOR);
-              return React.createElement("div", { key: p.name, style: { background: "#f8f9ff", border: "1px solid rgba(124,58,237,0.1)", borderRadius: 10, padding: "9px 12px", display: "flex", alignItems: "center", gap: 10 } },
+              return React.createElement("div", { key: p.name, style: { background: "#f0f0f0", border: "1px solid rgba(0,0,0,0.1)", borderRadius: 10, padding: "9px 12px", display: "flex", alignItems: "center", gap: 10 } },
                 React.createElement("div", { style: { width: 10, height: 10, borderRadius: "50%", background: p.color, flexShrink: 0 } }),
-                React.createElement("span", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 13, letterSpacing: 0.5, flex: 1, color: "#1e1b4b" } }, p.name),
+                React.createElement("span", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 13, letterSpacing: 0.5, flex: 1, color: "#111" } }, p.name),
                 React.createElement("div", { style: { display: "flex", gap: 8, alignItems: "center" } },
                   ...recent.map((v, i) => React.createElement("div", { key: i, style: { textAlign: "center" } },
                     React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 16, color: metric === "net" ? (v > 0 ? POS_COLOR : v < 0 ? ERR_COLOR : "rgba(0,0,0,0.3)") : (v > 0 ? p.color : "rgba(0,0,0,0.2)"), lineHeight: 1 } }, (metric === "net" && v > 0 ? "+" : "") + v),
@@ -578,15 +585,19 @@
           const totErr = game.players.reduce((acc, p) => { const ge = sumSetErr(p.sets); ERRORS.forEach(t => acc[t.key] = (acc[t.key] || 0) + ge[t.key]); return acc; }, {});
           const net = netScore(totPos, totErr);
           const netColor = net >= 0 ? GREEN : "#f87171";
-          return React.createElement("div", { key: game.id, onClick: () => onSelect(game), onMouseEnter: e => e.currentTarget.style.background = "rgba(124,58,237,0.08)", onMouseLeave: e => e.currentTarget.style.background = "#f8f9ff", style: { background: "#f8f9ff", border: "1px solid rgba(124,58,237,0.12)", borderRadius: 12, padding: "12px 14px", cursor: "pointer", transition: "background 0.12s" } },
+          return React.createElement("div", { key: game.id, onClick: () => onSelect(game), onMouseEnter: e => e.currentTarget.style.background = "rgba(0,0,0,0.06)", onMouseLeave: e => e.currentTarget.style.background = "#f0f0f0", style: { background: "#f0f0f0", border: "1px solid rgba(0,0,0,0.12)", borderRadius: 12, padding: "12px 14px", cursor: "pointer", transition: "background 0.12s" } },
             React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between" } },
               React.createElement("div", null,
-                React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 17, letterSpacing: 1.5, color: "#1e1b4b" } }, game.label),
+                React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 17, letterSpacing: 1.5, color: "#111" } }, game.label),
                 React.createElement("div", { style: { fontSize: 10, color: "rgba(0,0,0,0.3)", marginTop: 2 } }, game.date + " · " + (game.setsPlayed || 3) + " sets")
               ),
               React.createElement("div", { style: { textAlign: "right" } },
-                React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 15, color: netColor } }, "NET " + (net > 0 ? "+" : "") + net),
-                React.createElement("div", { style: { fontSize: 10, color: POS_COLOR, marginTop: 2, fontFamily: "'Bebas Neue',sans-serif" } },
+                game.scoreLog && game.scoreLog.length > 0
+                  ? React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, color: game.scoreUs > game.scoreThem ? GREEN : game.scoreUs < game.scoreThem ? ERR_COLOR : "#111" } },
+                      game.scoreUs + " — " + game.scoreThem)
+                  : null,
+                React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 13, color: netColor, marginTop: 2 } }, "NET " + (net > 0 ? "+" : "") + net),
+                React.createElement("div", { style: { fontSize: 10, color: POS_COLOR, marginTop: 1, fontFamily: "'Bebas Neue',sans-serif" } },
                   POSITIVES.map(t => t.label + " " + (totPos[t.key] || 0)).join("  ")
                 )
               )
@@ -594,6 +605,134 @@
             React.createElement("div", { style: { fontSize: 10, color: "rgba(0,0,0,0.25)", marginTop: 5 } }, game.players.map(p => p.name).join(" · "))
           );
         })
+      );
+    }
+
+    // ── Court Time / Score helpers ─────────────────────────────────────────────
+    function calcCourtTime(scoreLog, players) {
+      // scoreLog: [{ set, scoreUs, scoreThem, lineup: [name,...] }, ...]
+      // Returns per-player: { pointsPlayed, teamWon, teamLost }
+      const stats = {};
+      players.forEach(p => { stats[p.name] = { pointsPlayed: 0, teamWon: 0, teamLost: 0 }; });
+      for (let i = 0; i < scoreLog.length; i++) {
+        const entry = scoreLog[i];
+        const prev  = i > 0 ? scoreLog[i - 1] : { scoreUs: 0, scoreThem: 0 };
+        const weScored = entry.scoreUs > prev.scoreUs;
+        entry.lineup.forEach(name => {
+          if (!stats[name]) stats[name] = { pointsPlayed: 0, teamWon: 0, teamLost: 0 };
+          stats[name].pointsPlayed++;
+          if (weScored) stats[name].teamWon++;
+          else          stats[name].teamLost++;
+        });
+      }
+      return stats;
+    }
+
+    // ── Court Time Summary panel ───────────────────────────────────────────────
+    function CourtTimePanel({ scoreLog, players }) {
+      if (!scoreLog || scoreLog.length === 0) return React.createElement("div", { style: { fontSize: 11, color: "rgba(0,0,0,0.3)", fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1, textAlign: "center", padding: "10px 0" } }, "NO POINTS LOGGED YET");
+
+      const stats = calcCourtTime(scoreLog, players);
+      const totalPts = scoreLog.length;
+
+      const sorted = Object.entries(stats)
+        .filter(([, v]) => v.pointsPlayed > 0)
+        .sort((a, b) => b[1].pointsPlayed - a[1].pointsPlayed);
+
+      return React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6 } },
+        ...sorted.map(([name, v]) => {
+          const pct   = totalPts > 0 ? Math.round(v.pointsPlayed / totalPts * 100) : 0;
+          const winPct = v.pointsPlayed > 0 ? Math.round(v.teamWon / v.pointsPlayed * 100) : 0;
+          const winColor = winPct >= 55 ? GREEN : winPct <= 44 ? ERR_COLOR : "rgba(0,0,0,0.4)";
+          return React.createElement("div", { key: name, style: { background: "#f0f0f0", border: "1px solid rgba(0,0,0,0.1)", borderRadius: 10, padding: "9px 12px" } },
+            React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 5 } },
+              React.createElement("span", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 14, letterSpacing: 0.5, color: "#111" } }, name),
+              React.createElement("div", { style: { display: "flex", gap: 8, alignItems: "center" } },
+                React.createElement("span", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 12, color: "rgba(0,0,0,0.4)" } }, v.pointsPlayed + " pts"),
+                React.createElement("span", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 13, color: winColor, background: winColor + "18", border: "1px solid " + winColor + "44", borderRadius: 6, padding: "1px 7px" } }, v.teamWon + "-" + v.teamLost)
+              )
+            ),
+            React.createElement("div", { style: { height: 5, borderRadius: 3, background: "rgba(0,0,0,0.08)", overflow: "hidden" } },
+              React.createElement("div", { style: { width: pct + "%", height: "100%", background: ACCENT, borderRadius: 3 } })
+            ),
+            React.createElement("div", { style: { display: "flex", justifyContent: "space-between", marginTop: 3 } },
+              React.createElement("span", { style: { fontSize: 9, color: "rgba(0,0,0,0.3)", fontFamily: "'Bebas Neue',sans-serif" } }, pct + "% of game"),
+              React.createElement("span", { style: { fontSize: 9, color: winColor, fontFamily: "'Bebas Neue',sans-serif" } }, winPct + "% win rate on court")
+            )
+          );
+        })
+      );
+    }
+
+    // ── Score Bar (Us / Them + lineup toggle) ─────────────────────────────────
+    function ScoreBar({ scoreUs, scoreThem, onScore, lineupOpen, setLineupOpen }) {
+      return React.createElement("div", {
+        style: { background: "#fff", border: "1px solid rgba(0,0,0,0.15)", borderRadius: 14, padding: "10px 12px", boxShadow: "0 2px 12px rgba(0,0,0,0.06)", marginBottom: 10, display: "flex", alignItems: "center", gap: 10 }
+      },
+        // US score
+        React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 6, flex: 1 } },
+          React.createElement("button", {
+            onClick: () => onScore("us"),
+            style: { width: 44, height: 44, borderRadius: 10, background: GREEN + "18", border: "2px solid " + GREEN, color: GREEN, fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }
+          }, "+"),
+          React.createElement("div", { style: { textAlign: "center", flex: 1 } },
+            React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 32, lineHeight: 1, color: GREEN } }, scoreUs),
+            React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 8, letterSpacing: 1.5, color: "rgba(0,0,0,0.3)", marginTop: 1 } }, "US")
+          )
+        ),
+        // Divider
+        React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, color: "rgba(0,0,0,0.2)" } }, ":"),
+        // THEM score
+        React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 6, flex: 1, flexDirection: "row-reverse" } },
+          React.createElement("button", {
+            onClick: () => onScore("them"),
+            style: { width: 44, height: 44, borderRadius: 10, background: ERR_COLOR + "12", border: "2px solid " + ERR_COLOR, color: ERR_COLOR, fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }
+          }, "+"),
+          React.createElement("div", { style: { textAlign: "center", flex: 1 } },
+            React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 32, lineHeight: 1, color: ERR_COLOR } }, scoreThem),
+            React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 8, letterSpacing: 1.5, color: "rgba(0,0,0,0.3)", marginTop: 1 } }, "THEM")
+          )
+        ),
+        // Lineup toggle
+        React.createElement("button", {
+          onClick: () => setLineupOpen(v => !v),
+          style: { width: 44, height: 44, borderRadius: 10, background: lineupOpen ? ACCENT : "transparent", border: "1px solid " + (lineupOpen ? ACCENT : "rgba(0,0,0,0.2)"), color: lineupOpen ? "#fff" : "rgba(0,0,0,0.45)", fontFamily: "'Bebas Neue',sans-serif", fontSize: 8, letterSpacing: 0.5, display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center", gap: 1, flexShrink: 0 }
+        },
+          React.createElement("span", { style: { fontSize: 14, lineHeight: 1 } }, "⑥"),
+          React.createElement("span", null, "LINEUP")
+        )
+      );
+    }
+
+    // ── Lineup Panel ──────────────────────────────────────────────────────────
+    function LineupPanel({ players, lineup, setLineup }) {
+      const onCourt = lineup.length;
+      return React.createElement("div", {
+        style: { background: "#fff", border: "1px solid rgba(0,0,0,0.15)", borderRadius: 14, padding: "10px 10px 8px", boxShadow: "0 2px 12px rgba(0,0,0,0.06)", marginBottom: 10 }
+      },
+        React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 8 } },
+          React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 11, letterSpacing: 1.5, color: "rgba(0,0,0,0.35)" } }, "LINEUP · TAP TO SUB IN/OUT"),
+          React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 11, color: onCourt === 6 ? GREEN : onCourt > 6 ? ERR_COLOR : "rgba(0,0,0,0.4)", background: onCourt === 6 ? GREEN + "15" : "transparent", borderRadius: 6, padding: "1px 7px", border: "1px solid " + (onCourt === 6 ? GREEN + "44" : "transparent") } }, onCourt + "/6 on court")
+        ),
+        React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 6 } },
+          ...players.map(p => {
+            const active = lineup.includes(p.name);
+            return React.createElement("button", {
+              key: p.name,
+              onClick: () => {
+                if (active) setLineup(prev => prev.filter(n => n !== p.name));
+                else        setLineup(prev => [...prev, p.name]);
+              },
+              style: {
+                background: active ? ACCENT : "#f0f0f0",
+                border: "1px solid " + (active ? ACCENT : "rgba(0,0,0,0.1)"),
+                borderRadius: 20, color: active ? "#fff" : "rgba(0,0,0,0.5)",
+                fontFamily: "'Bebas Neue',sans-serif", fontSize: 12, letterSpacing: 0.5,
+                padding: "5px 12px", transition: "all 0.12s"
+              }
+            }, p.name);
+          })
+        )
       );
     }
 
@@ -615,6 +754,12 @@
       const [selectedGame, setSelectedGame] = useState(null);
       const [lastAction,   setLastAction]   = useState(null);
       const [rosterOpen,   setRosterOpen]   = useState(false);
+      // Score + lineup state
+      const [scoreUs,      setScoreUs]      = useState(0);
+      const [scoreThem,    setScoreThem]    = useState(0);
+      const [lineup,       setLineup]       = useState([]);
+      const [scoreLog,     setScoreLog]     = useState([]);
+      const [lineupOpen,   setLineupOpen]   = useState(false);
 
       const newPlayer = (name) => ({ id: name, name, sets: emptySetStat() });
 
@@ -691,9 +836,18 @@
         return sumPos(pos) > 0 || sumErr(err) > 0;
       });
 
+      const handleScore = (side) => {
+        const newUs   = side === "us"   ? scoreUs   + 1 : scoreUs;
+        const newThem = side === "them" ? scoreThem + 1 : scoreThem;
+        setScoreUs(newUs);
+        setScoreThem(newThem);
+        setScoreLog(prev => [...prev, { set: currentSet, scoreUs: newUs, scoreThem: newThem, lineup: [...lineup] }]);
+      };
+
       const resetCurrent = () => confirm("Reset all current stats? This can't be undone.", () => {
         setPlayers(prev => prev.map(p => newPlayer(p.name)));
         setCurrentSet(1); setLastAction(null);
+        setScoreUs(0); setScoreThem(0); setScoreLog([]); setLineup([]);
       });
 
       const saveGame = () => {
@@ -701,10 +855,11 @@
         const dateObj = gameDate ? new Date(gameDate + "T12:00:00") : new Date();
         const date  = dateObj.toLocaleDateString("en-US", { month: "short", day: "numeric", year: "numeric" });
         const snap  = players.map(p => ({ name: p.name, sets: JSON.parse(JSON.stringify(p.sets)) }));
-        const newGames = [...games, { id: Date.now(), label, date, setsPlayed, players: snap }];
+        const newGames = [...games, { id: Date.now(), label, date, setsPlayed, players: snap, scoreUs, scoreThem, scoreLog: JSON.parse(JSON.stringify(scoreLog)) }];
         setGames(newGames); persist("vb-games-v2", newGames);
         setPlayers(prev => prev.map(p => newPlayer(p.name)));
         setCurrentSet(1); setLastAction(null);
+        setScoreUs(0); setScoreThem(0); setScoreLog([]); setLineup([]);
         setSaveOpen(false); setGameLabel(""); setGameDate(""); setSetsPlayed(3);
         showToast("✓ \"" + label + "\" saved");
       };
@@ -726,32 +881,32 @@
         { key: "games",   label: "Games" },
       ];
 
-      if (loading) return React.createElement("div", { style: { minHeight: "100vh", background: "#f0f4ff", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: 3, color: "rgba(0,0,0,0.3)" } }, "LOADING…");
+      if (loading) return React.createElement("div", { style: { minHeight: "100vh", background: "#f5f5f5", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: 3, color: "rgba(0,0,0,0.3)" } }, "LOADING…");
 
-      return React.createElement("div", { style: { minHeight: "100vh", background: BG, fontFamily: "'DM Sans',sans-serif", color: "#1e1b4b", paddingBottom: 60 } },
-        toast ? React.createElement("div", { style: { position: "fixed", top: 65, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(90deg,#7c3aed,#6366f1)", color: "#fff", borderRadius: 10, padding: "9px 18px", fontWeight: 700, fontSize: 13, zIndex: 999, boxShadow: "0 4px 18px rgba(124,58,237,0.4)", whiteSpace: "nowrap" } }, toast) : null,
+      return React.createElement("div", { style: { minHeight: "100vh", background: BG, fontFamily: "'DM Sans',sans-serif", color: "#111", paddingBottom: 60 } },
+        toast ? React.createElement("div", { style: { position: "fixed", top: 65, left: "50%", transform: "translateX(-50%)", background: "#111", color: "#fff", borderRadius: 10, padding: "9px 18px", fontWeight: 700, fontSize: 13, zIndex: 999, boxShadow: "0 4px 18px rgba(0,0,0,0.3)", whiteSpace: "nowrap" } }, toast) : null,
         React.createElement(ConfirmModal, { modal: confirmModal, onConfirm: () => { confirmModal.onConfirm(); setConfirmModal(null); }, onCancel: () => setConfirmModal(null) }),
         React.createElement(SaveModal, { open: saveOpen, gamesCount: games.length, setsPlayed, setSetsPlayed, gameLabel, setGameLabel, gameDate, setGameDate, onSave: saveGame, onClose: () => setSaveOpen(false) }),
         React.createElement(GameDetailModal, { game: selectedGame, onClose: () => setSelectedGame(null), onDelete: () => deleteGame(selectedGame.id) }),
 
         // Header
-        React.createElement("div", { style: { background: "rgba(240,244,255,0.92)", backdropFilter: "blur(12px)", borderBottom: "1px solid rgba(124,58,237,0.15)", padding: "12px 14px", position: "sticky", top: 0, zIndex: 100 } },
+        React.createElement("div", { style: { background: "rgba(245,245,245,0.95)", backdropFilter: "blur(12px)", borderBottom: "1px solid rgba(0,0,0,0.15)", padding: "12px 14px", position: "sticky", top: 0, zIndex: 100 } },
           React.createElement("div", { style: { maxWidth: 700, margin: "0 auto" } },
             React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 } },
               React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, letterSpacing: 3, color: ACCENT, lineHeight: 1 } }, "🏐 VB TRACKER"),
               React.createElement("div", { style: { display: "flex", gap: 7 } },
                 view === "track" && hasData ? React.createElement("button", { onClick: () => { const today = new Date(); const y = today.getFullYear(); const m = String(today.getMonth()+1).padStart(2,"0"); const d = String(today.getDate()).padStart(2,"0"); setGameDate(y+"-"+m+"-"+d); setSaveOpen(true); }, style: { background: ACCENT, border: "none", borderRadius: 8, color: "#fff", fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1.5, fontSize: 12, padding: "7px 13px" } }, "SAVE GAME") : null,
-                React.createElement("button", { onClick: () => setRosterOpen(v => !v), style: { background: rosterOpen ? "rgba(124,58,237,0.1)" : "transparent", border: "1px solid rgba(124,58,237,0.3)", borderRadius: 8, color: ACCENT, fontSize: 12, padding: "7px 11px", fontFamily: "'DM Sans',sans-serif" } }, rosterOpen ? "Done" : "✏️ Roster")
+                React.createElement("button", { onClick: () => setRosterOpen(v => !v), style: { background: rosterOpen ? "rgba(0,0,0,0.1)" : "transparent", border: "1px solid rgba(0,0,0,0.2)", borderRadius: 8, color: ACCENT, fontSize: 12, padding: "7px 11px", fontFamily: "'DM Sans',sans-serif" } }, rosterOpen ? "Done" : "✏️ Roster")
               )
             ),
-            rosterOpen ? React.createElement("div", { style: { marginBottom: 10, background: "rgba(124,58,237,0.06)", borderRadius: 10, padding: "10px 12px", border: "1px solid rgba(124,58,237,0.15)" } },
+            rosterOpen ? React.createElement("div", { style: { marginBottom: 10, background: "rgba(0,0,0,0.04)", borderRadius: 10, padding: "10px 12px", border: "1px solid rgba(0,0,0,0.15)" } },
               React.createElement("div", { style: { display: "flex", gap: 7, marginBottom: 8 } },
-                React.createElement("input", { value: nameInput, onChange: e => setNameInput(e.target.value), onKeyDown: e => e.key === "Enter" && addPlayer(), placeholder: "Add player name…", style: { flex: 1, background: "#fff", border: "1px solid rgba(124,58,237,0.25)", borderRadius: 8, color: "#1e1b4b", fontSize: 13, padding: "7px 11px", fontFamily: "'DM Sans',sans-serif" } }),
+                React.createElement("input", { value: nameInput, onChange: e => setNameInput(e.target.value), onKeyDown: e => e.key === "Enter" && addPlayer(), placeholder: "Add player name…", style: { flex: 1, background: "#fff", border: "1px solid rgba(0,0,0,0.2)", borderRadius: 8, color: "#111", fontSize: 13, padding: "7px 11px", fontFamily: "'DM Sans',sans-serif" } }),
                 React.createElement("button", { onClick: addPlayer, style: { background: ACCENT, border: "none", borderRadius: 8, color: "#fff", fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1, fontSize: 13, padding: "7px 14px" } }, "+ ADD")
               ),
               players.length > 0 ? React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: 6 } },
-                ...players.map(p => React.createElement("div", { key: p.id, style: { display: "flex", alignItems: "center", gap: 5, background: "#fff", border: "1px solid rgba(124,58,237,0.2)", borderRadius: 20, padding: "4px 10px 4px 8px" } },
-                  React.createElement("span", { style: { fontSize: 12, fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 0.5, color: "#1e1b4b" } }, p.name),
+                ...players.map(p => React.createElement("div", { key: p.id, style: { display: "flex", alignItems: "center", gap: 5, background: "#fff", border: "1px solid rgba(0,0,0,0.15)", borderRadius: 20, padding: "4px 10px 4px 8px" } },
+                  React.createElement("span", { style: { fontSize: 12, fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 0.5, color: "#111" } }, p.name),
                   React.createElement("button", { onClick: () => removePlayer(p.id), onMouseEnter: e => e.currentTarget.style.color = ERR_COLOR, onMouseLeave: e => e.currentTarget.style.color = "rgba(0,0,0,0.25)", style: { background: "transparent", border: "none", color: "rgba(0,0,0,0.25)", fontSize: 13, padding: 0, lineHeight: 1 } }, "✕")
                 ))
               ) : null
@@ -767,6 +922,11 @@
           view === "track" ? (
             players.length === 0 ? React.createElement(Empty, { text: 'TAP "ROSTER" TO ADD PLAYERS' }) :
             React.createElement("div", null,
+              // Score bar
+              React.createElement(ScoreBar, { scoreUs, scoreThem, onScore: handleScore, lineupOpen, setLineupOpen }),
+              // Lineup panel
+              lineupOpen ? React.createElement(LineupPanel, { players, lineup, setLineup }) : null,
+              // Set selector
               React.createElement("div", { style: { display: "flex", gap: 6, marginBottom: 14, alignItems: "center" } },
                 React.createElement("span", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 10, letterSpacing: 2, color: "rgba(0,0,0,0.35)", marginRight: 2 } }, "SET"),
                 ...SETS.map(n => React.createElement("button", { key: n, onClick: () => setCurrentSet(n), style: { width: 38, height: 34, background: currentSet === n ? ACCENT : "#fff", border: "1px solid " + (currentSet === n ? ACCENT : "rgba(0,0,0,0.12)"), borderRadius: 7, color: currentSet === n ? "#fff" : "rgba(0,0,0,0.45)", fontFamily: "'Bebas Neue',sans-serif", fontSize: 16 } }, n)),
@@ -775,7 +935,23 @@
               React.createElement(QuickLog, { players, currentSet, onLog: handleLog, onUndo: handleUndo, lastAction })
             )
           ) : null,
-          view === "summary" ? (players.length === 0 ? React.createElement(Empty, { text: "NO PLAYERS YET" }) : React.createElement(GameSummary, { players })) : null,
+          view === "summary" ? (players.length === 0 ? React.createElement(Empty, { text: "NO PLAYERS YET" }) :
+            React.createElement("div", null,
+              React.createElement(GameSummary, { players }),
+              scoreLog.length > 0 ? React.createElement("div", { style: { marginTop: 20 } },
+                React.createElement(SL, null, "COURT TIME · " + scoreLog.length + " POINTS LOGGED"),
+                React.createElement("div", { style: { background: "#fff", border: "1px solid rgba(0,0,0,0.12)", borderRadius: 14, padding: "12px 10px", boxShadow: "0 2px 12px rgba(0,0,0,0.04)", marginBottom: 4 } },
+                  React.createElement("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: 10 } },
+                    React.createElement("div", { style: { textAlign: "center" } },
+                      React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, lineHeight: 1, color: scoreUs > scoreThem ? GREEN : scoreUs < scoreThem ? ERR_COLOR : "#111" } }, scoreUs + " — " + scoreThem),
+                      React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 8, letterSpacing: 1.5, color: "rgba(0,0,0,0.3)", marginTop: 2 } }, "CURRENT SCORE")
+                    )
+                  ),
+                  React.createElement(CourtTimePanel, { scoreLog, players })
+                )
+              ) : null
+            )
+          ) : null,
           view === "season" ? React.createElement(SeasonView, { games }) : null,
           view === "trends" ? React.createElement(TrendsView, { games }) : null,
           view === "games" ? React.createElement(GamesLog, { games, onSelect: setSelectedGame }) : null
