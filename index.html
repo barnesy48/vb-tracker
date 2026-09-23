@@ -442,6 +442,133 @@
       );
     }
 
+    // ── Trends view ───────────────────────────────────────────────────────────
+    const LINE_COLORS = ["#7c3aed","#0ea5e9","#16a34a","#f59e0b","#ec4899","#f97316","#06b6d4","#8b5cf6","#10b981","#ef4444","#6366f1","#84cc16"];
+
+    function TrendsView({ games }) {
+      const [metric, setMetric] = useState("net");
+
+      if (games.length < 2) return React.createElement(Empty, { text: "NEED 2+ GAMES FOR TRENDS", sub: "Save more games to see trend lines" });
+
+      // Build per-player data series (rebuilds when metric changes)
+      const byPlayer = {};
+      games.forEach((game, gi) => {
+        game.players.forEach(p => {
+          if (!byPlayer[p.name]) byPlayer[p.name] = { name: p.name, points: new Array(games.length).fill(null) };
+          const pos = sumSetPos(p.sets), err = sumSetErr(p.sets);
+          let val;
+          if (metric === "net")                            val = netScore(pos, err);
+          else if (POSITIVES.some(t => t.key === metric)) val = pos[metric] || 0;
+          else                                             val = err[metric] || 0;
+          byPlayer[p.name].points[gi] = val;
+        });
+      });
+
+      const allPlayers = Object.values(byPlayer).map((p, i) => ({
+        name: p.name,
+        color: LINE_COLORS[i % LINE_COLORS.length],
+        values: games.map((_, gi) => p.points[gi] !== null ? p.points[gi] : 0),
+      }));
+
+      // Chart dims
+      const W = 320, H = 160, PAD = { t: 12, r: 8, b: 28, l: 32 };
+      const IW = W - PAD.l - PAD.r, IH = H - PAD.t - PAD.b;
+      const N = games.length;
+
+      const allVals = allPlayers.flatMap(p => p.values);
+      const minV = Math.min(...allVals, 0);
+      const maxV = Math.max(...allVals, 1);
+      const range = maxV - minV || 1;
+
+      const xOf = i => PAD.l + (i / (N - 1)) * IW;
+      const yOf = v => PAD.t + IH - ((v - minV) / range) * IH;
+
+      // Zero line
+      const zeroY = yOf(0);
+      const showZero = minV < 0 && maxV > 0;
+
+      const gridLines = [];
+      const step = range <= 4 ? 1 : range <= 10 ? 2 : range <= 20 ? 5 : 10;
+      for (let v = Math.ceil(minV / step) * step; v <= maxV; v += step) {
+        const y = yOf(v);
+        gridLines.push({ v, y });
+      }
+
+      const gameLabels = games.map(g => g.label.slice(0, 8));
+
+      const metricChips = [
+        { key: "net", label: "NET", color: ACCENT },
+        ...POSITIVES.map(t => ({ key: t.key, label: t.label.toUpperCase(), color: POS_COLOR })),
+        ...ERRORS.map(t => ({ key: t.key, label: t.label.toUpperCase(), color: ERR_COLOR })),
+      ];
+
+      return React.createElement("div", null,
+        // Metric chips
+        React.createElement("div", { style: { display: "flex", gap: 5, flexWrap: "wrap", marginBottom: 14 } },
+          ...metricChips.map(c => React.createElement("button", {
+            key: c.key, onClick: () => setMetric(c.key),
+            style: { background: metric === c.key ? c.color + "18" : "#f0f4ff", border: "1px solid " + (metric === c.key ? c.color : "rgba(0,0,0,0.1)"), borderRadius: 6, color: metric === c.key ? c.color : "rgba(0,0,0,0.4)", fontFamily: "'Bebas Neue',sans-serif", fontSize: 10, letterSpacing: 1, padding: "4px 10px" }
+          }, c.label))
+        ),
+
+        // SVG chart
+        React.createElement("div", { style: { background: "#fff", border: "1px solid rgba(124,58,237,0.12)", borderRadius: 14, padding: "12px 8px 8px", boxShadow: "0 2px 12px rgba(124,58,237,0.06)", overflowX: "auto" } },
+          React.createElement("svg", { viewBox: "0 0 " + W + " " + H, style: { width: "100%", display: "block", minWidth: Math.max(W, N * 40) } },
+            // Grid lines
+            ...gridLines.map(({ v, y }) => React.createElement("g", { key: v },
+              React.createElement("line", { x1: PAD.l, x2: W - PAD.r, y1: y, y2: y, stroke: v === 0 ? "rgba(0,0,0,0.2)" : "rgba(0,0,0,0.06)", strokeWidth: v === 0 ? 1.5 : 1, strokeDasharray: v === 0 ? "none" : "3,3" }),
+              React.createElement("text", { x: PAD.l - 4, y: y + 4, fontSize: 8, textAnchor: "end", fill: "rgba(0,0,0,0.3)", fontFamily: "DM Sans,sans-serif" }, v)
+            )),
+            // Game x-axis labels
+            ...games.map((g, i) => React.createElement("text", { key: i, x: xOf(i), y: H - 4, fontSize: 7.5, textAnchor: "middle", fill: "rgba(0,0,0,0.35)", fontFamily: "DM Sans,sans-serif" }, gameLabels[i])),
+            // Player lines + dots
+            ...allPlayers.map(p =>
+              React.createElement("g", { key: p.name },
+                React.createElement("polyline", {
+                  points: p.values.map((v, i) => xOf(i) + "," + yOf(v)).join(" "),
+                  fill: "none", stroke: p.color, strokeWidth: 2, strokeLinejoin: "round", strokeLinecap: "round"
+                }),
+                ...p.values.map((v, i) => React.createElement("circle", { key: i, cx: xOf(i), cy: yOf(v), r: 3.5, fill: p.color, stroke: "#fff", strokeWidth: 1.5 }))
+              )
+            )
+          )
+        ),
+
+        // Legend
+        React.createElement("div", { style: { display: "flex", flexWrap: "wrap", gap: "6px 14px", marginTop: 12, padding: "0 4px" } },
+          ...allPlayers.map(p => React.createElement("div", { key: p.name, style: { display: "flex", alignItems: "center", gap: 5 } },
+            React.createElement("div", { style: { width: 20, height: 3, borderRadius: 2, background: p.color, flexShrink: 0 } }),
+            React.createElement("span", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 12, letterSpacing: 0.5, color: "#1e1b4b" } }, p.name)
+          ))
+        ),
+
+        // Per-player last 3 games mini table
+        React.createElement("div", { style: { marginTop: 16 } },
+          React.createElement(SL, null, "RECENT GAME VALUES · " + metric.toUpperCase()),
+          React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6 } },
+            ...allPlayers.map(p => {
+              const recent = p.values.slice(-Math.min(5, games.length));
+              const recentGames = games.slice(-Math.min(5, games.length));
+              const avg = recent.reduce((s, v) => s + v, 0) / recent.length;
+              const trend = recent.length > 1 ? recent[recent.length-1] - recent[0] : 0;
+              const tColor = metric === "net" ? (trend > 0 ? POS_COLOR : trend < 0 ? ERR_COLOR : "rgba(0,0,0,0.3)") : (trend >= 0 ? POS_COLOR : ERR_COLOR);
+              return React.createElement("div", { key: p.name, style: { background: "#f8f9ff", border: "1px solid rgba(124,58,237,0.1)", borderRadius: 10, padding: "9px 12px", display: "flex", alignItems: "center", gap: 10 } },
+                React.createElement("div", { style: { width: 10, height: 10, borderRadius: "50%", background: p.color, flexShrink: 0 } }),
+                React.createElement("span", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 13, letterSpacing: 0.5, flex: 1, color: "#1e1b4b" } }, p.name),
+                React.createElement("div", { style: { display: "flex", gap: 8, alignItems: "center" } },
+                  ...recent.map((v, i) => React.createElement("div", { key: i, style: { textAlign: "center" } },
+                    React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 16, color: metric === "net" ? (v > 0 ? POS_COLOR : v < 0 ? ERR_COLOR : "rgba(0,0,0,0.3)") : (v > 0 ? p.color : "rgba(0,0,0,0.2)"), lineHeight: 1 } }, (metric === "net" && v > 0 ? "+" : "") + v),
+                    React.createElement("div", { style: { fontSize: 7, color: "rgba(0,0,0,0.25)", fontFamily: "DM Sans,sans-serif" } }, recentGames[i].label.slice(0,6))
+                  )),
+                  React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 11, color: tColor, background: tColor + "18", border: "1px solid " + tColor + "44", borderRadius: 5, padding: "2px 6px", marginLeft: 4 } }, trend > 0 ? "▲" : trend < 0 ? "▼" : "—")
+                )
+              );
+            })
+          )
+        )
+      );
+    }
+
     // ── Games log ──────────────────────────────────────────────────────────────
     function GamesLog({ games, onSelect }) {
       if (!games.length) return React.createElement(Empty, { text: "NO GAMES SAVED YET", sub: "Save your first game from the tracker" });
@@ -595,7 +722,8 @@
         { key: "track",   label: "Track" },
         { key: "summary", label: "Summary" },
         { key: "season",  label: "Season" },
-        { key: "games",   label: "Games (" + games.length + ")" },
+        { key: "trends",  label: "Trends" },
+        { key: "games",   label: "Games" },
       ];
 
       if (loading) return React.createElement("div", { style: { minHeight: "100vh", background: "#f0f4ff", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: 3, color: "rgba(0,0,0,0.3)" } }, "LOADING…");
@@ -649,6 +777,7 @@
           ) : null,
           view === "summary" ? (players.length === 0 ? React.createElement(Empty, { text: "NO PLAYERS YET" }) : React.createElement(GameSummary, { players })) : null,
           view === "season" ? React.createElement(SeasonView, { games }) : null,
+          view === "trends" ? React.createElement(TrendsView, { games }) : null,
           view === "games" ? React.createElement(GamesLog, { games, onSelect: setSelectedGame }) : null
         )
       );
