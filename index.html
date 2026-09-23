@@ -34,10 +34,14 @@
     // ── Constants ──────────────────────────────────────────────────────────────
     const POS_COLOR = "#16a34a";
     const ERR_COLOR = "#dc2626";
+    const ATT_COLOR = "#2563eb"; // blue — neutral attack attempts
     const POSITIVES = [
       { key: "kills",  label: "Kill",  icon: "Kill", color: POS_COLOR },
       { key: "aces",   label: "Ace",   icon: "Ace",  color: POS_COLOR },
       { key: "digs",   label: "Dig",   icon: "Dig",  color: POS_COLOR },
+    ];
+    const NEUTRALS = [
+      { key: "attempts", label: "Att", icon: "Att", color: ATT_COLOR },
     ];
     const ERRORS = [
       { key: "serve",    label: "Serve", icon: "Srv", color: ERR_COLOR },
@@ -45,7 +49,7 @@
       { key: "pass",     label: "Pass",  icon: "Pas", color: ERR_COLOR },
       { key: "position", label: "Pos",   icon: "Pos", color: ERR_COLOR },
     ];
-    const ALL_STATS = [...POSITIVES, ...ERRORS];
+    const ALL_STATS = [...POSITIVES, ...NEUTRALS, ...ERRORS];
     const PLAYER_GRADIENTS = [
       "linear-gradient(135deg,#111,#444)",
       "linear-gradient(135deg,#333,#111)",
@@ -65,9 +69,67 @@
     const BG     = "#f5f5f5";
     const SETS   = [1, 2, 3, 4, 5];
 
-    const emptyPos     = () => ({ kills: 0, aces: 0, digs: 0 });
+    const emptyPos     = () => ({ kills: 0, aces: 0, digs: 0, attempts: 0, passRatings: [] });
     const emptyErr     = () => ({ serve: 0, hit: 0, pass: 0, position: 0 });
     const emptySetStat = () => ({ 1: { pos: emptyPos(), err: emptyErr() }, 2: { pos: emptyPos(), err: emptyErr() }, 3: { pos: emptyPos(), err: emptyErr() }, 4: { pos: emptyPos(), err: emptyErr() }, 5: { pos: emptyPos(), err: emptyErr() } });
+
+    // Attack efficiency = (kills - hit_errors) / (kills + hit_errors + attempts)
+    const attackEff = (pos, err) => {
+      const total = (pos.kills||0) + (err.hit||0) + (pos.attempts||0);
+      if (total === 0) return null;
+      return ((pos.kills||0) - (err.hit||0)) / total;
+    };
+    const fmtEff = (v) => v === null ? "—" : (v >= 0 ? "+" : "") + (v * 100).toFixed(0) + "%";
+
+    // Average pass rating
+    const avgPass = (pos) => {
+      const r = pos && pos.passRatings;
+      if (!r || r.length === 0) return null;
+      return r.reduce((s, v) => s + v, 0) / r.length;
+    };
+    const fmtPass = (v) => v === null ? "—" : v.toFixed(1);
+
+    // Rotation sideout % from scoreLog
+    // Volleyball rotation: server's rotation. We track lineup as array of names.
+    // For sideout tracking we use set-level index: which of the 6 rotation slots won receiving rally.
+    // We approximate rotation number by counting service changes within a set.
+    const calcRotationStats = (scoreLog) => {
+      // Returns { rotationN: { sideouts, total } } per set
+      // We track when possession (who is serving) changes to determine rotation
+      const result = {};
+      let curServer = null; // "us" or "them"
+      let rotNum = 0; // our rotation number (0-5), increments each time we rotate in
+      SETS.forEach(s => { result[s] = {}; for (let i=0;i<6;i++) result[s][i] = {sideouts:0,total:0}; });
+
+      scoreLog.forEach((entry, i) => {
+        const prev = i > 0 ? scoreLog[i-1] : { scoreUs: 0, scoreThem: 0, set: entry.set };
+        if (entry.set !== prev.set) { curServer = null; rotNum = 0; }
+        const weScored = entry.scoreUs > prev.scoreUs;
+        const theyScored = entry.scoreThem > prev.scoreThem;
+        const prevServer = curServer;
+
+        // Determine who served this point (server from prev state)
+        // First point of set: assume "them" serving (we receive) for sideout tracking
+        if (curServer === null) curServer = "them";
+
+        const receiving = curServer === "them"; // we are receiving = sideout opportunity
+        if (receiving) {
+          const rot = rotNum % 6;
+          if (!result[entry.set]) result[entry.set] = {};
+          if (!result[entry.set][rot]) result[entry.set][rot] = {sideouts:0,total:0};
+          result[entry.set][rot].total++;
+          if (weScored) result[entry.set][rot].sideouts++;
+        }
+
+        // Update server for next point
+        if (weScored) {
+          if (curServer === "them") { curServer = "us"; rotNum++; } // we rotate in
+        } else if (theyScored) {
+          if (curServer === "us") curServer = "them";
+        }
+      });
+      return result;
+    };
 
     const sumPos   = (p) => POSITIVES.reduce((s, t) => s + ((p && p[t.key]) || 0), 0);
     const sumErr   = (e) => ERRORS.reduce((s, t) => s + ((e && e[t.key]) || 0), 0);
@@ -75,7 +137,13 @@
 
     const sumSetPos = (sets) => {
       const r = emptyPos();
-      SETS.forEach(n => POSITIVES.forEach(t => { r[t.key] += (sets && sets[n] && sets[n].pos && sets[n].pos[t.key]) || 0; }));
+      SETS.forEach(n => {
+        const pos = sets && sets[n] && sets[n].pos;
+        if (!pos) return;
+        POSITIVES.forEach(t => { r[t.key] += pos[t.key] || 0; });
+        r.attempts += pos.attempts || 0;
+        r.passRatings = [...r.passRatings, ...(pos.passRatings || [])];
+      });
       return r;
     };
     const sumSetErr = (sets) => {
@@ -236,9 +304,84 @@
       );
     }
 
+    // ── Pass Rating Modal ──────────────────────────────────────────────────────
+    function PassRatingModal({ open, playerName, onRate, onSkip }) {
+      if (!open) return null;
+      const ratings = [
+        { v: 3, label: "3", sub: "Perfect", color: GREEN },
+        { v: 2, label: "2", sub: "Good", color: "#16a34a" },
+        { v: 1, label: "1", sub: "Poor", color: "#f59e0b" },
+        { v: 0, label: "0", sub: "Error/Ace", color: ERR_COLOR },
+      ];
+      return React.createElement("div", {
+        style: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", zIndex: 800, display: "flex", alignItems: "flex-end", justifyContent: "center", padding: "0 0 24px" },
+        onClick: onSkip
+      },
+        React.createElement("div", {
+          style: { background: "#fff", border: "1px solid rgba(0,0,0,0.15)", borderRadius: 16, padding: "16px 16px 12px", width: "100%", maxWidth: 380, boxShadow: "0 -4px 24px rgba(0,0,0,0.12)" },
+          onClick: e => e.stopPropagation()
+        },
+          React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 12 } },
+            React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 13, letterSpacing: 1.5, color: "rgba(0,0,0,0.4)" } },
+              "PASS RATING · " + (playerName || "").toUpperCase()
+            ),
+            React.createElement("button", { onClick: onSkip, style: { background: "transparent", border: "none", color: "rgba(0,0,0,0.3)", fontSize: 16, padding: 0 } }, "✕")
+          ),
+          React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8 } },
+            ...ratings.map(r => React.createElement("button", {
+              key: r.v,
+              onClick: () => onRate(r.v),
+              style: {
+                background: r.color + "12", border: "2px solid " + r.color,
+                borderRadius: 12, padding: "12px 4px", textAlign: "center",
+                display: "flex", flexDirection: "column", alignItems: "center", gap: 2
+              }
+            },
+              React.createElement("span", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 32, color: r.color, lineHeight: 1 } }, r.label),
+              React.createElement("span", { style: { fontSize: 9, color: r.color, fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 0.5 } }, r.sub)
+            ))
+          ),
+          React.createElement("button", { onClick: onSkip, style: { marginTop: 10, width: "100%", background: "transparent", border: "1px solid rgba(0,0,0,0.1)", borderRadius: 8, color: "rgba(0,0,0,0.3)", fontSize: 11, padding: "7px", fontFamily: "'DM Sans',sans-serif" } }, "Skip rating")
+        )
+      );
+    }
+
+    // ── Rotation Sideout Panel ─────────────────────────────────────────────────
+    function RotationSideoutPanel({ scoreLog }) {
+      if (!scoreLog || scoreLog.length < 3) return React.createElement("div", { style: { fontSize: 11, color: "rgba(0,0,0,0.3)", fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1, textAlign: "center", padding: "10px 0" } }, "LOG MORE POINTS TO SEE ROTATION DATA");
+      const rotStats = calcRotationStats(scoreLog);
+      // Flatten across all sets
+      const combined = {};
+      for (let i = 0; i < 6; i++) combined[i] = { sideouts: 0, total: 0 };
+      Object.values(rotStats).forEach(setData => {
+        Object.entries(setData).forEach(([rot, v]) => {
+          combined[rot].sideouts += v.sideouts;
+          combined[rot].total += v.total;
+        });
+      });
+      const entries = Object.entries(combined).filter(([,v]) => v.total > 0);
+      if (entries.length === 0) return React.createElement("div", { style: { fontSize: 11, color: "rgba(0,0,0,0.3)", fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1, textAlign: "center", padding: "10px 0" } }, "NO RECEIVING RALLIES YET");
+      return React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 5 } },
+        ...entries.map(([rot, v]) => {
+          const pct = v.total > 0 ? Math.round(v.sideouts / v.total * 100) : 0;
+          const color = pct >= 65 ? GREEN : pct >= 50 ? "#f59e0b" : ERR_COLOR;
+          return React.createElement("div", { key: rot, style: { display: "flex", alignItems: "center", gap: 10 } },
+            React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 11, color: "rgba(0,0,0,0.4)", width: 48, flexShrink: 0 } }, "ROT " + (parseInt(rot)+1)),
+            React.createElement("div", { style: { flex: 1, height: 18, background: "rgba(0,0,0,0.06)", borderRadius: 4, overflow: "hidden" } },
+              React.createElement("div", { style: { width: pct + "%", height: "100%", background: color, borderRadius: 4, display: "flex", alignItems: "center", paddingLeft: 5 } },
+                pct >= 20 ? React.createElement("span", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 10, color: "#fff" } }, pct + "%") : null
+              )
+            ),
+            React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 11, color, width: 36, textAlign: "right", flexShrink: 0 } }, v.sideouts + "/" + v.total)
+          );
+        })
+      );
+    }
+
     // ── Quick-Log grid ─────────────────────────────────────────────────────────
     function QuickLog({ players, currentSet, onLog, onUndo, lastAction }) {
-      const isPos = (key) => POSITIVES.some(p => p.key === key);
+      const isPos  = (key) => POSITIVES.some(p => p.key === key) || key === "attempts";
+      const isNeutral = (key) => key === "attempts";
 
       const getCur = (p, key) => {
         const bucket = isPos(key) ? "pos" : "err";
@@ -249,8 +392,8 @@
         return SETS.reduce((s, n) => s + ((p.sets && p.sets[n] && p.sets[n][bucket] && p.sets[n][bucket][key]) || 0), 0);
       };
 
-      // Header row
-      const headerRow = React.createElement("div", { style: { display: "grid", gridTemplateColumns: "80px repeat(7, 1fr)", gap: 3, marginBottom: 4, paddingLeft: 2 } },
+      // Header row — 8 stat columns now (Kill, Ace, Dig, Att, Srv, Hit, Pas, Pos)
+      const headerRow = React.createElement("div", { style: { display: "grid", gridTemplateColumns: "80px repeat(8, 1fr)", gap: 3, marginBottom: 4, paddingLeft: 2 } },
         React.createElement("div", null),
         ...ALL_STATS.map(s => React.createElement("div", { key: s.key, style: { textAlign: "center", fontFamily: "'Bebas Neue',sans-serif", fontSize: 11, letterSpacing: 0.5, color: s.color, lineHeight: 1, paddingBottom: 2 } }, s.icon))
       );
@@ -266,6 +409,7 @@
           const cur = getCur(p, stat.key);
           const all = getAll(p, stat.key);
           const active = cur > 0;
+          const isNeu = isNeutral(stat.key);
           return React.createElement("button", {
             key: stat.key,
             onClick: () => onLog(p.id, stat.key),
@@ -274,19 +418,19 @@
             onTouchStart:e => { e.currentTarget.style.transform = "scale(0.88)"; e.currentTarget.style.background = stat.color + "55"; },
             onTouchEnd:  e => { e.currentTarget.style.transform = "scale(1)"; },
             style: {
-              background: active ? stat.color + "18" : "rgba(0,0,0,0.03)",
-              border: "1px solid " + (active ? stat.color + "99" : "rgba(0,0,0,0.08)"),
+              background: active ? stat.color + (isNeu ? "15" : "18") : "rgba(0,0,0,0.03)",
+              border: "1px solid " + (active ? stat.color + "99" : isNeu ? stat.color + "30" : "rgba(0,0,0,0.08)"),
               borderRadius: 8, padding: "5px 2px",
               display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
               minHeight: 48, userSelect: "none", WebkitTapHighlightColor: "transparent", transition: "background 0.08s",
             }
           },
-            React.createElement("span", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 20, color: active ? stat.color : "rgba(0,0,0,0.18)", lineHeight: 1 } }, cur),
+            React.createElement("span", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 20, color: active ? stat.color : isNeu ? stat.color + "80" : "rgba(0,0,0,0.18)", lineHeight: 1 } }, cur),
             all !== cur ? React.createElement("span", { style: { fontSize: 7, color: "rgba(0,0,0,0.2)", lineHeight: 1, marginTop: 1 } }, all) : null
           );
         });
 
-        return React.createElement("div", { key: p.id, style: { display: "grid", gridTemplateColumns: "80px repeat(7, 1fr)", gap: 3, marginBottom: 5, alignItems: "center" } },
+        return React.createElement("div", { key: p.id, style: { display: "grid", gridTemplateColumns: "80px repeat(8, 1fr)", gap: 3, marginBottom: 5, alignItems: "center" } },
           // Name + net badge
           React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 5, paddingRight: 4 } },
             React.createElement("div", { style: { width: 24, height: 24, borderRadius: "50%", background: grad, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Bebas Neue',sans-serif", fontSize: 12, color: "#fff", flexShrink: 0 } }, p.name.charAt(0).toUpperCase()),
@@ -760,6 +904,8 @@
       const [lineup,       setLineup]       = useState([]);
       const [scoreLog,     setScoreLog]     = useState([]);
       const [lineupOpen,   setLineupOpen]   = useState(false);
+      // Pass rating modal
+      const [passModal,    setPassModal]    = useState(null); // { playerId, playerName, set }
 
       const newPlayer = (name) => ({ id: name, name, sets: emptySetStat() });
 
@@ -767,7 +913,11 @@
         const g = load("vb-games-v2");
         const r = load("vb-roster");
         if (g) setGames(g);
-        if (r) { setRoster(r); setPlayers(r.map(newPlayer)); }
+        if (r) {
+          const sorted = [...r].sort((a, b) => a.localeCompare(b));
+          setRoster(sorted);
+          setPlayers(sorted.map(newPlayer));
+        }
         setLoading(false);
       }, []);
 
@@ -777,9 +927,9 @@
       const addPlayer = () => {
         const t = nameInput.trim();
         if (!t || players.find(p => p.name.toLowerCase() === t.toLowerCase())) return;
-        const nr = [...roster, t];
+        const nr = [...roster, t].sort((a, b) => a.localeCompare(b));
         setRoster(nr); persist("vb-roster", nr);
-        setPlayers(prev => [...prev, newPlayer(t)]);
+        setPlayers(prev => [...prev, newPlayer(t)].sort((a, b) => a.name.localeCompare(b.name)));
         setNameInput("");
       };
 
@@ -792,24 +942,38 @@
         });
       };
 
-      const isPos = (key) => POSITIVES.some(p => p.key === key);
+      const isPos = (key) => POSITIVES.some(p => p.key === key) || key === "attempts";
 
-      const handleLog = (playerId, key) => {
-        const p = players.find(x => x.id === playerId);
-        setLastAction({ playerId, key, playerName: p && p.name, set: currentSet });
+      const applyLog = (playerId, key, passRating) => {
         const bucket = isPos(key) ? "pos" : "err";
         setPlayers(prev => prev.map(pl => {
           if (pl.id !== playerId) return pl;
           const curSet = pl.sets[currentSet] || { pos: emptyPos(), err: emptyErr() };
-          const curBucket = curSet[bucket] || (bucket === "pos" ? emptyPos() : emptyErr());
-          return Object.assign({}, pl, {
-            sets: Object.assign({}, pl.sets, {
-              [currentSet]: Object.assign({}, curSet, {
-                [bucket]: Object.assign({}, curBucket, { [key]: (curBucket[key] || 0) + 1 })
-              })
-            })
-          });
+          const curBucket = Object.assign({}, curSet[bucket] || (bucket === "pos" ? emptyPos() : emptyErr()));
+          if (key === "passRating") {
+            // special: append to passRatings array
+            curBucket.passRatings = [...(curBucket.passRatings || []), passRating];
+            return Object.assign({}, pl, { sets: Object.assign({}, pl.sets, { [currentSet]: Object.assign({}, curSet, { pos: curBucket }) }) });
+          }
+          curBucket[key] = (curBucket[key] || 0) + 1;
+          return Object.assign({}, pl, { sets: Object.assign({}, pl.sets, { [currentSet]: Object.assign({}, curSet, { [bucket]: curBucket }) }) });
         }));
+      };
+
+      const handleLog = (playerId, key) => {
+        const p = players.find(x => x.id === playerId);
+        setLastAction({ playerId, key, playerName: p && p.name, set: currentSet });
+        applyLog(playerId, key);
+        // After a dig, pop up pass rating modal
+        if (key === "digs") {
+          setPassModal({ playerId, playerName: p && p.name, set: currentSet });
+        }
+      };
+
+      const handlePassRate = (rating) => {
+        if (!passModal) return;
+        applyLog(passModal.playerId, "passRating", rating);
+        setPassModal(null);
       };
 
       const handleUndo = () => {
@@ -819,15 +983,15 @@
         setPlayers(prev => prev.map(pl => {
           if (pl.id !== playerId) return pl;
           const curSet = pl.sets[set] || { pos: emptyPos(), err: emptyErr() };
-          const curBucket = curSet[bucket] || (bucket === "pos" ? emptyPos() : emptyErr());
-          return Object.assign({}, pl, {
-            sets: Object.assign({}, pl.sets, {
-              [set]: Object.assign({}, curSet, {
-                [bucket]: Object.assign({}, curBucket, { [key]: Math.max(0, (curBucket[key] || 0) - 1) })
-              })
-            })
-          });
+          const curBucket = Object.assign({}, curSet[bucket] || (bucket === "pos" ? emptyPos() : emptyErr()));
+          curBucket[key] = Math.max(0, (curBucket[key] || 0) - 1);
+          // Also remove last pass rating if undoing a dig
+          if (key === "digs" && curBucket.passRatings && curBucket.passRatings.length > 0) {
+            curBucket.passRatings = curBucket.passRatings.slice(0, -1);
+          }
+          return Object.assign({}, pl, { sets: Object.assign({}, pl.sets, { [set]: Object.assign({}, curSet, { [bucket]: curBucket }) }) });
         }));
+        setPassModal(null);
         setLastAction(null);
       };
 
@@ -886,6 +1050,7 @@
       return React.createElement("div", { style: { minHeight: "100vh", background: BG, fontFamily: "'DM Sans',sans-serif", color: "#111", paddingBottom: 60 } },
         toast ? React.createElement("div", { style: { position: "fixed", top: 65, left: "50%", transform: "translateX(-50%)", background: "#111", color: "#fff", borderRadius: 10, padding: "9px 18px", fontWeight: 700, fontSize: 13, zIndex: 999, boxShadow: "0 4px 18px rgba(0,0,0,0.3)", whiteSpace: "nowrap" } }, toast) : null,
         React.createElement(ConfirmModal, { modal: confirmModal, onConfirm: () => { confirmModal.onConfirm(); setConfirmModal(null); }, onCancel: () => setConfirmModal(null) }),
+        React.createElement(PassRatingModal, { open: !!passModal, playerName: passModal && passModal.playerName, onRate: handlePassRate, onSkip: () => setPassModal(null) }),
         React.createElement(SaveModal, { open: saveOpen, gamesCount: games.length, setsPlayed, setSetsPlayed, gameLabel, setGameLabel, gameDate, setGameDate, onSave: saveGame, onClose: () => setSaveOpen(false) }),
         React.createElement(GameDetailModal, { game: selectedGame, onClose: () => setSelectedGame(null), onDelete: () => deleteGame(selectedGame.id) }),
 
@@ -932,7 +1097,14 @@
                 ...SETS.map(n => React.createElement("button", { key: n, onClick: () => setCurrentSet(n), style: { width: 38, height: 34, background: currentSet === n ? ACCENT : "#fff", border: "1px solid " + (currentSet === n ? ACCENT : "rgba(0,0,0,0.12)"), borderRadius: 7, color: currentSet === n ? "#fff" : "rgba(0,0,0,0.45)", fontFamily: "'Bebas Neue',sans-serif", fontSize: 16 } }, n)),
                 hasData ? React.createElement("button", { onClick: resetCurrent, style: { marginLeft: "auto", background: "transparent", border: "1px solid rgba(220,38,38,0.3)", borderRadius: 7, color: "rgba(220,38,38,0.65)", fontSize: 11, padding: "5px 10px", fontFamily: "'DM Sans',sans-serif" } }, "Reset") : null
               ),
-              React.createElement(QuickLog, { players, currentSet, onLog: handleLog, onUndo: handleUndo, lastAction })
+              React.createElement(QuickLog, {
+                players: [...players].sort((a, b) => {
+                  const aOn = lineup.includes(a.name), bOn = lineup.includes(b.name);
+                  if (aOn !== bOn) return aOn ? -1 : 1;
+                  return a.name.localeCompare(b.name);
+                }),
+                currentSet, onLog: handleLog, onUndo: handleUndo, lastAction
+              })
             )
           ) : null,
           view === "summary" ? (players.length === 0 ? React.createElement(Empty, { text: "NO PLAYERS YET" }) :
@@ -940,15 +1112,46 @@
               React.createElement(GameSummary, { players }),
               scoreLog.length > 0 ? React.createElement("div", { style: { marginTop: 20 } },
                 React.createElement(SL, null, "COURT TIME · " + scoreLog.length + " POINTS LOGGED"),
-                React.createElement("div", { style: { background: "#fff", border: "1px solid rgba(0,0,0,0.12)", borderRadius: 14, padding: "12px 10px", boxShadow: "0 2px 12px rgba(0,0,0,0.04)", marginBottom: 4 } },
-                  React.createElement("div", { style: { display: "flex", justifyContent: "space-between", marginBottom: 10 } },
-                    React.createElement("div", { style: { textAlign: "center" } },
-                      React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, lineHeight: 1, color: scoreUs > scoreThem ? GREEN : scoreUs < scoreThem ? ERR_COLOR : "#111" } }, scoreUs + " — " + scoreThem),
-                      React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 8, letterSpacing: 1.5, color: "rgba(0,0,0,0.3)", marginTop: 2 } }, "CURRENT SCORE")
-                    )
+                React.createElement("div", { style: { background: "#fff", border: "1px solid rgba(0,0,0,0.12)", borderRadius: 14, padding: "12px 10px", boxShadow: "0 2px 12px rgba(0,0,0,0.04)", marginBottom: 12 } },
+                  React.createElement("div", { style: { display: "flex", justifyContent: "space-between", alignItems: "center", marginBottom: 10 } },
+                    React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 28, lineHeight: 1, color: scoreUs > scoreThem ? GREEN : scoreUs < scoreThem ? ERR_COLOR : "#111" } }, scoreUs + " — " + scoreThem),
+                    React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 8, letterSpacing: 1.5, color: "rgba(0,0,0,0.3)" } }, "CURRENT SCORE")
                   ),
                   React.createElement(CourtTimePanel, { scoreLog, players })
-                )
+                ),
+                React.createElement(SL, null, "SIDEOUT % BY ROTATION"),
+                React.createElement("div", { style: { background: "#fff", border: "1px solid rgba(0,0,0,0.12)", borderRadius: 14, padding: "12px 10px", boxShadow: "0 2px 12px rgba(0,0,0,0.04)", marginBottom: 12 } },
+                  React.createElement("div", { style: { fontSize: 10, color: "rgba(0,0,0,0.3)", marginBottom: 8, fontFamily: "'DM Sans',sans-serif" } }, "Target: 65%+ · Green = on track · Red = focus area"),
+                  React.createElement(RotationSideoutPanel, { scoreLog })
+                ),
+                // Per-player attack efficiency + pass rating
+                players.some(p => { const pos = sumSetPos(p.sets); return (pos.kills||0)+(pos.attempts||0) > 0 || (pos.passRatings||[]).length > 0; }) ?
+                  React.createElement("div", null,
+                    React.createElement(SL, null, "ATTACK EFFICIENCY · PASS RATING"),
+                    React.createElement("div", { style: { background: "#fff", border: "1px solid rgba(0,0,0,0.12)", borderRadius: 14, padding: "12px 10px", boxShadow: "0 2px 12px rgba(0,0,0,0.04)" } },
+                      React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 6 } },
+                        ...players.map(p => {
+                          const pos = sumSetPos(p.sets), err = sumSetErr(p.sets);
+                          const eff = attackEff(pos, err);
+                          const pass = avgPass(pos);
+                          if (eff === null && pass === null) return null;
+                          const effColor = eff === null ? "rgba(0,0,0,0.25)" : eff >= 0.25 ? GREEN : eff >= 0.1 ? "#f59e0b" : ERR_COLOR;
+                          const passColor = pass === null ? "rgba(0,0,0,0.25)" : pass >= 2.3 ? GREEN : pass >= 1.5 ? "#f59e0b" : ERR_COLOR;
+                          return React.createElement("div", { key: p.id, style: { display: "flex", alignItems: "center", gap: 10 } },
+                            React.createElement("span", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 13, flex: 1, color: "#111" } }, p.name),
+                            eff !== null ? React.createElement("div", { style: { textAlign: "center" } },
+                              React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 14, color: effColor } }, fmtEff(eff)),
+                              React.createElement("div", { style: { fontSize: 8, color: "rgba(0,0,0,0.3)", fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 0.5 } }, "ATK EFF")
+                            ) : null,
+                            pass !== null ? React.createElement("div", { style: { textAlign: "center" } },
+                              React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 14, color: passColor } }, fmtPass(pass)),
+                              React.createElement("div", { style: { fontSize: 8, color: "rgba(0,0,0,0.3)", fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 0.5 } }, "PASS")
+                            ) : null
+                          );
+                        }).filter(Boolean)
+                      )
+                    )
+                  ) : null
               ) : null
             )
           ) : null,
