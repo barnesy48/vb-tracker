@@ -455,6 +455,140 @@
       );
     }
 
+    // ── Help Modal ────────────────────────────────────────────────────────────
+    function HelpModal({ open, onClose }) {
+      const [tab, setTab] = React.useState("track");
+      if (!open) return null;
+
+      const Section = ({ title, children }) =>
+        React.createElement("div", { style: { marginBottom: 18 } },
+          React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 13, letterSpacing: 2, color: ACCENT, borderBottom: "2px solid " + ACCENT, paddingBottom: 4, marginBottom: 10 } }, title),
+          children
+        );
+
+      const Row = ({ label, color, children }) =>
+        React.createElement("div", { style: { display: "flex", gap: 10, marginBottom: 8, alignItems: "flex-start" } },
+          React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 12, color: color || ACCENT, background: (color || ACCENT) + "15", border: "1px solid " + (color || ACCENT) + "40", borderRadius: 5, padding: "2px 8px", minWidth: 44, textAlign: "center", flexShrink: 0, marginTop: 1 } }, label),
+          React.createElement("div", { style: { fontSize: 12, color: "rgba(0,0,0,0.65)", lineHeight: 1.5, fontFamily: "'DM Sans',sans-serif" } }, children)
+        );
+
+      const Bench = ({ color, text }) =>
+        React.createElement("div", { style: { display: "flex", gap: 8, marginBottom: 6, alignItems: "flex-start" } },
+          React.createElement("div", { style: { width: 8, height: 8, borderRadius: "50%", background: color, flexShrink: 0, marginTop: 4 } }),
+          React.createElement("div", { style: { fontSize: 12, color: "rgba(0,0,0,0.65)", lineHeight: 1.5, fontFamily: "'DM Sans',sans-serif" } }, text)
+        );
+
+      const tabs = [
+        { key: "track", label: "Tracking" },
+        { key: "stats", label: "Stats" },
+        { key: "data",  label: "Reading Data" },
+      ];
+
+      const trackContent = React.createElement("div", null,
+        React.createElement(Section, { title: "Score Bar" },
+          React.createElement(Bench, { color: GREEN, text: "Tap green + to log a point for your team. Tap red + for the opponent. The score updates live and every point records who's on court." }),
+          React.createElement(Bench, { color: ACCENT, text: "Tap ⑥ LINEUP to open the lineup panel and set who's playing." })
+        ),
+        React.createElement(Section, { title: "Lineup Panel" },
+          React.createElement(Bench, { color: ACCENT, text: "Tap a player to toggle them on/off court. Active players show black — bench players show gray." }),
+          React.createElement(Bench, { color: GREEN, text: "The counter shows X/6. Green when exactly 6 are on court." }),
+          React.createElement(Bench, { color: ACCENT, text: "To sub: tap the player coming OUT (goes gray), tap the player coming IN (goes black). Done — stats and court time update automatically." })
+        ),
+        React.createElement(Section, { title: "Logging Stats" },
+          React.createElement(Bench, { color: ACCENT, text: "Players on court rise to the top of the grid. Bench players sit below." }),
+          React.createElement(Bench, { color: ACCENT, text: "Tap any stat cell to log it for that player in the current set. The number in the cell is the set count; a smaller number below it is the game total." }),
+          React.createElement(Bench, { color: POS_COLOR, text: "After tapping Dig, a pass rating sheet pops up (0–3). Tap a rating or hit Skip — either way the dig is already logged." }),
+          React.createElement(Bench, { color: ATT_COLOR, text: "Tap Att for any attack that doesn't end in a kill or error (ball stays in play). This unlocks attack efficiency in Summary." }),
+          React.createElement(Bench, { color: ACCENT, text: "Tap ↩ Undo at the bottom of the grid to remove the last action." })
+        ),
+        React.createElement(Section, { title: "Sets & Saving" },
+          React.createElement(Bench, { color: ACCENT, text: "Switch sets with the SET 1–5 buttons. Stats are stored per set — switching doesn't erase anything." }),
+          React.createElement(Bench, { color: ACCENT, text: "Tap SAVE GAME in the header when the match ends. Enter the opponent name, date, and sets played. All stats are saved to the Season log and the tracker resets." })
+        )
+      );
+
+      const statsContent = React.createElement("div", null,
+        React.createElement(Section, { title: "Positive Stats (Green)" },
+          React.createElement(Row, { label: "Kill", color: POS_COLOR }, "A point-ending attack. Logged when your player's hit lands in bounds and the opponent cannot return it."),
+          React.createElement(Row, { label: "Ace", color: POS_COLOR }, "A serve that the opponent cannot pass — either hits the floor or results in an overpass directly."),
+          React.createElement(Row, { label: "Dig", color: POS_COLOR }, "A successful defensive play that keeps the ball alive after an attack. Rate 0–3 after each dig.")
+        ),
+        React.createElement(Section, { title: "Neutral Stat (Blue)" },
+          React.createElement(Row, { label: "Att", color: ATT_COLOR }, "Attack attempt — ball is attacked but kept in play (not a kill, not an error). Required to calculate attack efficiency.")
+        ),
+        React.createElement(Section, { title: "Error Stats (Red)" },
+          React.createElement(Row, { label: "Srv", color: ERR_COLOR }, "Serve error — ball lands out of bounds, hits the net, or misses the service box."),
+          React.createElement(Row, { label: "Hit", color: ERR_COLOR }, "Hitting error — attack lands out, hits the net, or is blocked for a point."),
+          React.createElement(Row, { label: "Pas", color: ERR_COLOR }, "Passing error — a receive or dig that results directly in a lost rally."),
+          React.createElement(Row, { label: "Pos", color: ERR_COLOR }, "Positioning error — point lost due to being out of rotation or wrong position.")
+        ),
+        React.createElement(Section, { title: "Pass Rating (0–3)" },
+          React.createElement(Row, { label: "3", color: GREEN }, "Perfect — setter has full range of options (front, back, middle, quick sets)."),
+          React.createElement(Row, { label: "2", color: "#16a34a" }, "Good — setter has most options, maybe not the quick middle."),
+          React.createElement(Row, { label: "1", color: "#f59e0b" }, "Poor — limited set options, probably only one option available."),
+          React.createElement(Row, { label: "0", color: ERR_COLOR }, "Error/Ace — opponent scores directly from the serve.")
+        )
+      );
+
+      const dataContent = React.createElement("div", null,
+        React.createElement(Section, { title: "Net Score" },
+          React.createElement(Bench, { color: GREEN, text: "Kills + Aces + Digs minus all errors. Quick health check. Positive = contributing more than hurting." }),
+          React.createElement(Bench, { color: "rgba(0,0,0,0.4)", text: "Context matters — a libero will have more digs and fewer kills than an outside hitter." })
+        ),
+        React.createElement(Section, { title: "Attack Efficiency" },
+          React.createElement(Bench, { color: ACCENT, text: "Formula: (Kills − Hitting Errors) ÷ Total Attempts" }),
+          React.createElement(Bench, { color: GREEN, text: "+25% or higher — elite. Pro outside hitters target this." }),
+          React.createElement(Bench, { color: "#f59e0b", text: "+10% to +24% — solid. Working well." }),
+          React.createElement(Bench, { color: ERR_COLOR, text: "Below +10% or negative — more errors than production. Time to adjust." }),
+          React.createElement(Bench, { color: "rgba(0,0,0,0.4)", text: "Requires logging Kill + Att + Hit errors to calculate." })
+        ),
+        React.createElement(Section, { title: "Pass Rating Average" },
+          React.createElement(Bench, { color: GREEN, text: "2.3 or higher — elite passer. Setter has full options most of the time." }),
+          React.createElement(Bench, { color: "#f59e0b", text: "1.5 to 2.2 — average. Setter is somewhat limited." }),
+          React.createElement(Bench, { color: ERR_COLOR, text: "Below 1.5 — struggling. Consider changing serve target or working on reception." })
+        ),
+        React.createElement(Section, { title: "Rotation Sideout %" },
+          React.createElement(Bench, { color: ACCENT, text: "Did your team win the rally when receiving serve? Tracked per rotation (1–6)." }),
+          React.createElement(Bench, { color: GREEN, text: "65% or higher — pro-level. Strong rotation." }),
+          React.createElement(Bench, { color: "#f59e0b", text: "50%–64% — competitive but improvable." }),
+          React.createElement(Bench, { color: ERR_COLOR, text: "Below 50% — losing more receiving rallies than winning. Priority practice focus." }),
+          React.createElement(Bench, { color: "rgba(0,0,0,0.4)", text: "Needs score logging + lineup set to calculate. The more points logged, the more reliable." })
+        ),
+        React.createElement(Section, { title: "Court Time" },
+          React.createElement(Bench, { color: ACCENT, text: "Points played = how many rallies a player was on court for." }),
+          React.createElement(Bench, { color: GREEN, text: "W-L record while on court — team's score during their stints. A strong W-L with high court time = impact player." }),
+          React.createElement(Bench, { color: "rgba(0,0,0,0.4)", text: "Requires lineup to be set before scoring points." })
+        )
+      );
+
+      return React.createElement("div", {
+        style: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.72)", zIndex: 600, display: "flex", alignItems: "flex-end", justifyContent: "center", padding: 0 },
+        onClick: onClose
+      },
+        React.createElement("div", {
+          style: { background: "#fff", borderRadius: "20px 20px 0 0", width: "100%", maxWidth: 500, maxHeight: "88vh", display: "flex", flexDirection: "column", boxShadow: "0 -4px 32px rgba(0,0,0,0.18)" },
+          onClick: e => e.stopPropagation()
+        },
+          // Header
+          React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", padding: "16px 18px 12px", borderBottom: "1px solid rgba(0,0,0,0.08)", flexShrink: 0 } },
+            React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: 2, color: ACCENT } }, "HOW TO USE VB TRACKER"),
+            React.createElement("button", { onClick: onClose, style: { background: "transparent", border: "none", color: "rgba(0,0,0,0.3)", fontSize: 20, padding: 0, lineHeight: 1 } }, "✕")
+          ),
+          // Tab bar
+          React.createElement("div", { style: { display: "flex", gap: 0, borderBottom: "1px solid rgba(0,0,0,0.08)", flexShrink: 0 } },
+            ...tabs.map(t => React.createElement("button", {
+              key: t.key, onClick: () => setTab(t.key),
+              style: { flex: 1, background: "transparent", border: "none", borderBottom: tab === t.key ? "2px solid " + ACCENT : "2px solid transparent", color: tab === t.key ? ACCENT : "rgba(0,0,0,0.4)", fontFamily: "'Bebas Neue',sans-serif", fontSize: 12, letterSpacing: 1, padding: "10px 4px", cursor: "pointer" }
+            }, t.label))
+          ),
+          // Scrollable content
+          React.createElement("div", { style: { overflowY: "auto", padding: "16px 18px 32px", flex: 1 } },
+            tab === "track" ? trackContent : tab === "stats" ? statsContent : dataContent
+          )
+        )
+      );
+    }
+
     // ── Game summary ───────────────────────────────────────────────────────────
     function GameSummary({ players }) {
       const [sv, setSv] = useState("all");
@@ -906,6 +1040,7 @@
       const [lineupOpen,   setLineupOpen]   = useState(false);
       // Pass rating modal
       const [passModal,    setPassModal]    = useState(null); // { playerId, playerName, set }
+      const [helpOpen,     setHelpOpen]     = useState(false);
 
       const newPlayer = (name) => ({ id: name, name, sets: emptySetStat() });
 
@@ -1051,6 +1186,7 @@
         toast ? React.createElement("div", { style: { position: "fixed", top: 65, left: "50%", transform: "translateX(-50%)", background: "#111", color: "#fff", borderRadius: 10, padding: "9px 18px", fontWeight: 700, fontSize: 13, zIndex: 999, boxShadow: "0 4px 18px rgba(0,0,0,0.3)", whiteSpace: "nowrap" } }, toast) : null,
         React.createElement(ConfirmModal, { modal: confirmModal, onConfirm: () => { confirmModal.onConfirm(); setConfirmModal(null); }, onCancel: () => setConfirmModal(null) }),
         React.createElement(PassRatingModal, { open: !!passModal, playerName: passModal && passModal.playerName, onRate: handlePassRate, onSkip: () => setPassModal(null) }),
+        React.createElement(HelpModal, { open: helpOpen, onClose: () => setHelpOpen(false) }),
         React.createElement(SaveModal, { open: saveOpen, gamesCount: games.length, setsPlayed, setSetsPlayed, gameLabel, setGameLabel, gameDate, setGameDate, onSave: saveGame, onClose: () => setSaveOpen(false) }),
         React.createElement(GameDetailModal, { game: selectedGame, onClose: () => setSelectedGame(null), onDelete: () => deleteGame(selectedGame.id) }),
 
@@ -1061,6 +1197,7 @@
               React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, letterSpacing: 3, color: ACCENT, lineHeight: 1 } }, "🏐 VB TRACKER"),
               React.createElement("div", { style: { display: "flex", gap: 7 } },
                 view === "track" && hasData ? React.createElement("button", { onClick: () => { const today = new Date(); const y = today.getFullYear(); const m = String(today.getMonth()+1).padStart(2,"0"); const d = String(today.getDate()).padStart(2,"0"); setGameDate(y+"-"+m+"-"+d); setSaveOpen(true); }, style: { background: ACCENT, border: "none", borderRadius: 8, color: "#fff", fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1.5, fontSize: 12, padding: "7px 13px" } }, "SAVE GAME") : null,
+                React.createElement("button", { onClick: () => setHelpOpen(true), style: { background: "transparent", border: "1px solid rgba(0,0,0,0.2)", borderRadius: 8, color: ACCENT, fontSize: 13, fontWeight: 700, padding: "7px 11px", fontFamily: "'DM Sans',sans-serif", lineHeight: 1 } }, "?"),
                 React.createElement("button", { onClick: () => setRosterOpen(v => !v), style: { background: rosterOpen ? "rgba(0,0,0,0.1)" : "transparent", border: "1px solid rgba(0,0,0,0.2)", borderRadius: 8, color: ACCENT, fontSize: 12, padding: "7px 11px", fontFamily: "'DM Sans',sans-serif" } }, rosterOpen ? "Done" : "✏️ Roster")
               )
             ),
