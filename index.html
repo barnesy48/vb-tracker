@@ -12,7 +12,7 @@
   <link href="https://fonts.googleapis.com/css2?family=Bebas+Neue&family=DM+Sans:wght@400;500;700&display=swap" rel="stylesheet" />
   <style>
     * { box-sizing: border-box; margin: 0; padding: 0; }
-    html, body { height: 100%; background: #0d1b2a; }
+    html, body { height: 100%; background: #1e0a3c; }
     body { -webkit-font-smoothing: antialiased; padding-top: env(safe-area-inset-top); padding-bottom: env(safe-area-inset-bottom); }
     ::-webkit-scrollbar { width: 4px; }
     ::-webkit-scrollbar-thumb { background: rgba(255,255,255,0.15); border-radius: 4px; }
@@ -33,20 +33,34 @@
 
     // ── Constants ──────────────────────────────────────────────────────────────
     const POSITIVES = [
-      { key: "kills",  label: "Kill",  icon: "💀", color: "#2ecc71" },
-      { key: "aces",   label: "Ace",   icon: "🎯", color: "#f4d03f" },
-      { key: "digs",   label: "Dig",   icon: "🛡️", color: "#5dade2" },
+      { key: "kills",  label: "Kill",  icon: "💀", color: "#4ade80" },
+      { key: "aces",   label: "Ace",   icon: "🎯", color: "#facc15" },
+      { key: "digs",   label: "Dig",   icon: "🛡️", color: "#38bdf8" },
     ];
     const ERRORS = [
-      { key: "serve",    label: "Serve",    icon: "🏐", color: "#e63946" },
-      { key: "hit",      label: "Hit",      icon: "💥", color: "#f4a261" },
-      { key: "pass",     label: "Pass",     icon: "🤲", color: "#c0392b" },
-      { key: "position", label: "Position", icon: "📍", color: "#9b59b6" },
+      { key: "serve",    label: "Serve",    icon: "🏐", color: "#f87171" },
+      { key: "hit",      label: "Hit",      icon: "💥", color: "#fb923c" },
+      { key: "pass",     label: "Pass",     icon: "🤲", color: "#f472b6" },
+      { key: "position", label: "Position", icon: "📍", color: "#a78bfa" },
     ];
     const ALL_STATS = [...POSITIVES, ...ERRORS];
-    const ACCENT = "#f4d03f";
-    const GREEN  = "#2ecc71";
-    const BG     = "linear-gradient(160deg,#0d1b2a 0%,#1a2f1e 50%,#0d1b2a 100%)";
+    const PLAYER_GRADIENTS = [
+      "linear-gradient(135deg,#c084fc,#818cf8)",
+      "linear-gradient(135deg,#38bdf8,#6366f1)",
+      "linear-gradient(135deg,#4ade80,#06b6d4)",
+      "linear-gradient(135deg,#facc15,#f97316)",
+      "linear-gradient(135deg,#f472b6,#c084fc)",
+      "linear-gradient(135deg,#fb923c,#f87171)",
+      "linear-gradient(135deg,#a78bfa,#38bdf8)",
+      "linear-gradient(135deg,#4ade80,#a78bfa)",
+      "linear-gradient(135deg,#facc15,#4ade80)",
+      "linear-gradient(135deg,#f87171,#f472b6)",
+      "linear-gradient(135deg,#38bdf8,#facc15)",
+      "linear-gradient(135deg,#c084fc,#f472b6)",
+    ];
+    const ACCENT = "#c084fc";
+    const GREEN  = "#4ade80";
+    const BG     = "linear-gradient(160deg,#1e0a3c 0%,#0f172a 50%,#1a0e2e 100%)";
     const SETS   = [1, 2, 3, 4, 5];
 
     const emptyPos     = () => ({ kills: 0, aces: 0, digs: 0 });
@@ -119,7 +133,7 @@
 
     function NetBadge({ pos, err }) {
       const net = netScore(pos, err);
-      const color = net > 0 ? GREEN : net < 0 ? "#e63946" : "rgba(255,255,255,0.3)";
+      const color = net > 0 ? GREEN : net < 0 ? "#f87171" : "rgba(255,255,255,0.3)";
       const label = net > 0 ? "+" + net : "" + net;
       return React.createElement("span", {
         style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 14, color, background: color + "22", border: "1px solid " + color + "55", borderRadius: 6, padding: "1px 7px" }
@@ -130,12 +144,12 @@
     function ConfirmModal({ modal, onConfirm, onCancel }) {
       if (!modal) return null;
       return React.createElement("div", { style: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.78)", zIndex: 700, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 } },
-        React.createElement("div", { style: { background: "#1a2b1e", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 16, padding: 26, width: "100%", maxWidth: 320, textAlign: "center" } },
+        React.createElement("div", { style: { background: "#2d1060", border: "1px solid rgba(192,132,252,0.3)", borderRadius: 16, padding: 26, width: "100%", maxWidth: 320, textAlign: "center" } },
           React.createElement("div", { style: { fontSize: 26, marginBottom: 12 } }, "⚠️"),
           React.createElement("div", { style: { fontSize: 14, color: "rgba(255,255,255,0.85)", lineHeight: 1.5, marginBottom: 20 } }, modal.message),
           React.createElement("div", { style: { display: "flex", gap: 10 } },
             React.createElement("button", { onClick: onCancel, style: { flex: 1, background: "transparent", border: "1px solid rgba(255,255,255,0.2)", borderRadius: 9, color: "rgba(255,255,255,0.6)", fontSize: 13, padding: 10, fontFamily: "'DM Sans',sans-serif", fontWeight: 700 } }, "Cancel"),
-            React.createElement("button", { onClick: onConfirm, style: { flex: 1, background: "#e63946", border: "none", borderRadius: 9, color: "#fff", fontSize: 13, fontWeight: 700, padding: 10, fontFamily: "'DM Sans',sans-serif" } }, "Confirm")
+            React.createElement("button", { onClick: onConfirm, style: { flex: 1, background: "#f87171", border: "none", borderRadius: 9, color: "#fff", fontSize: 13, fontWeight: 700, padding: 10, fontFamily: "'DM Sans',sans-serif" } }, "Confirm")
           )
         )
       );
@@ -145,7 +159,7 @@
     function SaveModal({ open, gamesCount, setsPlayed, setSetsPlayed, gameLabel, setGameLabel, gameDate, setGameDate, onSave, onClose }) {
       if (!open) return null;
       return React.createElement("div", { style: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.72)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center", padding: 20 }, onClick: onClose },
-        React.createElement("div", { style: { background: "#1a2b1e", border: "1px solid rgba(255,255,255,0.15)", borderRadius: 16, padding: 26, width: "100%", maxWidth: 360 }, onClick: e => e.stopPropagation() },
+        React.createElement("div", { style: { background: "#2d1060", border: "1px solid rgba(192,132,252,0.3)", borderRadius: 16, padding: 26, width: "100%", maxWidth: 360 }, onClick: e => e.stopPropagation() },
           React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 20, letterSpacing: 2, marginBottom: 6, color: ACCENT } }, "SAVE GAME TO SEASON"),
           React.createElement("div", { style: { fontSize: 11, color: "rgba(255,255,255,0.4)", marginBottom: 14 } }, "Stats will be saved and the tracker reset for the next game."),
           React.createElement("div", { style: { marginBottom: 14 } },
@@ -181,7 +195,7 @@
       };
 
       return React.createElement("div", { style: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.82)", zIndex: 500, display: "flex", alignItems: "center", justifyContent: "center", padding: 16, overflowY: "auto" }, onClick: onClose },
-        React.createElement("div", { style: { background: "#1a2b1e", border: "1px solid rgba(255,255,255,0.12)", borderRadius: 16, padding: 22, width: "100%", maxWidth: 420 }, onClick: e => e.stopPropagation() },
+        React.createElement("div", { style: { background: "#2d1060", border: "1px solid rgba(192,132,252,0.3)", borderRadius: 16, padding: 22, width: "100%", maxWidth: 420 }, onClick: e => e.stopPropagation() },
           React.createElement("div", { style: { display: "flex", alignItems: "flex-start", justifyContent: "space-between", marginBottom: 14 } },
             React.createElement("div", null,
               React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 20, letterSpacing: 2, color: ACCENT } }, game.label),
@@ -211,7 +225,7 @@
               );
             })
           ),
-          React.createElement("button", { onClick: onDelete, style: { marginTop: 16, width: "100%", background: "rgba(230,57,70,0.1)", border: "1px solid rgba(230,57,70,0.35)", borderRadius: 9, color: "#e63946", fontSize: 12, padding: 9, fontFamily: "'DM Sans',sans-serif" } }, "Delete this game")
+          React.createElement("button", { onClick: onDelete, style: { marginTop: 16, width: "100%", background: "rgba(248,113,113,0.1)", border: "1px solid rgba(248,113,113,0.35)", borderRadius: 9, color: "#f87171", fontSize: 12, padding: 9, fontFamily: "'DM Sans',sans-serif" } }, "Delete this game")
         )
       );
     }
@@ -229,61 +243,60 @@
         return SETS.reduce((s, n) => s + ((p.sets && p.sets[n] && p.sets[n][bucket] && p.sets[n][bucket][key]) || 0), 0);
       };
 
-      const StatBtn = (p, stat) => {
-        const cur = getCur(p, stat.key);
-        const all = getAll(p, stat.key);
-        const active = cur > 0;
-        return React.createElement("button", {
-          key: stat.key,
-          onClick: () => onLog(p.id, stat.key),
-          onMouseDown: e => { e.currentTarget.style.transform = "scale(0.88)"; e.currentTarget.style.background = stat.color + "55"; },
-          onMouseUp:   e => { e.currentTarget.style.transform = "scale(1)"; },
-          onTouchStart:e => { e.currentTarget.style.transform = "scale(0.88)"; e.currentTarget.style.background = stat.color + "55"; },
-          onTouchEnd:  e => { e.currentTarget.style.transform = "scale(1)"; },
-          style: {
-            flex: 1,
-            background: active ? stat.color + "22" : "rgba(255,255,255,0.04)",
-            border: "1px solid " + (active ? stat.color + "80" : "rgba(255,255,255,0.09)"),
-            borderRadius: 10, padding: "8px 4px",
-            display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
-            minHeight: 58, userSelect: "none", WebkitTapHighlightColor: "transparent", transition: "background 0.08s",
-          }
-        },
-          React.createElement("span", { style: { fontSize: 16, lineHeight: 1, marginBottom: 2 } }, stat.icon),
-          React.createElement("span", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 26, color: active ? stat.color : "rgba(255,255,255,0.2)", lineHeight: 1 } }, cur),
-          React.createElement("span", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 9, color: stat.color + "99", letterSpacing: 1, marginTop: 1 } }, stat.label.slice(0,4).toUpperCase()),
-          all !== cur ? React.createElement("span", { style: { fontSize: 8, color: "rgba(255,255,255,0.18)", lineHeight: 1, marginTop: 1 } }, all + " total") : null
-        );
-      };
+      // Header row
+      const headerRow = React.createElement("div", { style: { display: "grid", gridTemplateColumns: "80px repeat(7, 1fr)", gap: 3, marginBottom: 4, paddingLeft: 2 } },
+        React.createElement("div", null),
+        ...ALL_STATS.map(s => React.createElement("div", { key: s.key, style: { textAlign: "center", fontSize: 14, lineHeight: 1, paddingBottom: 2 } }, s.icon))
+      );
 
-      return React.createElement("div", { style: { display: "flex", flexDirection: "column", gap: 10 } },
-        ...players.map(p => {
-          const totalPos = sumSetPos(p.sets);
-          const totalErr = sumSetErr(p.sets);
-          const net = netScore(totalPos, totalErr);
-          const netColor = net > 0 ? GREEN : net < 0 ? "#e63946" : "rgba(255,255,255,0.35)";
-          return React.createElement("div", {
-            key: p.id,
-            style: { background: "rgba(255,255,255,0.03)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 14, padding: "10px 10px 8px", }
+      const playerRows = players.map((p, pi) => {
+        const totalPos = sumSetPos(p.sets);
+        const totalErr = sumSetErr(p.sets);
+        const net = netScore(totalPos, totalErr);
+        const netColor = net > 0 ? GREEN : net < 0 ? "#f87171" : "rgba(255,255,255,0.35)";
+        const grad = PLAYER_GRADIENTS[pi % PLAYER_GRADIENTS.length];
+
+        const cells = ALL_STATS.map(stat => {
+          const cur = getCur(p, stat.key);
+          const all = getAll(p, stat.key);
+          const active = cur > 0;
+          return React.createElement("button", {
+            key: stat.key,
+            onClick: () => onLog(p.id, stat.key),
+            onMouseDown: e => { e.currentTarget.style.transform = "scale(0.88)"; e.currentTarget.style.background = stat.color + "55"; },
+            onMouseUp:   e => { e.currentTarget.style.transform = "scale(1)"; },
+            onTouchStart:e => { e.currentTarget.style.transform = "scale(0.88)"; e.currentTarget.style.background = stat.color + "55"; },
+            onTouchEnd:  e => { e.currentTarget.style.transform = "scale(1)"; },
+            style: {
+              background: active ? stat.color + "28" : "rgba(255,255,255,0.04)",
+              border: "1px solid " + (active ? stat.color + "90" : "rgba(255,255,255,0.08)"),
+              borderRadius: 8, padding: "5px 2px",
+              display: "flex", flexDirection: "column", alignItems: "center", justifyContent: "center",
+              minHeight: 48, userSelect: "none", WebkitTapHighlightColor: "transparent", transition: "background 0.08s",
+            }
           },
-            // Player header
-            React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 8 } },
-              React.createElement("div", { style: { width: 30, height: 30, borderRadius: "50%", background: "linear-gradient(135deg," + ACCENT + ",#e67e22)", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Bebas Neue',sans-serif", fontSize: 15, color: "#1a1a2e", flexShrink: 0 } }, p.name.charAt(0).toUpperCase()),
-              React.createElement("span", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 17, letterSpacing: 1, flex: 1 } }, p.name),
-              React.createElement("span", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 13, color: netColor, background: netColor + "22", border: "1px solid " + netColor + "55", borderRadius: 6, padding: "2px 8px" } }, (net > 0 ? "+" : "") + net + " NET")
-            ),
-            // Positive row
-            React.createElement("div", { style: { display: "flex", gap: 6, marginBottom: 6 } },
-              ...POSITIVES.map(stat => StatBtn(p, stat))
-            ),
-            // Error row
-            React.createElement("div", { style: { display: "flex", gap: 6 } },
-              ...ERRORS.map(stat => StatBtn(p, stat))
-            )
+            React.createElement("span", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 20, color: active ? stat.color : "rgba(255,255,255,0.2)", lineHeight: 1 } }, cur),
+            all !== cur ? React.createElement("span", { style: { fontSize: 7, color: "rgba(255,255,255,0.18)", lineHeight: 1, marginTop: 1 } }, all) : null
           );
-        }),
-        // Undo bar
-        lastAction ? React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8, paddingTop: 4 } },
+        });
+
+        return React.createElement("div", { key: p.id, style: { display: "grid", gridTemplateColumns: "80px repeat(7, 1fr)", gap: 3, marginBottom: 5, alignItems: "center" } },
+          // Name + net badge
+          React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 5, paddingRight: 4 } },
+            React.createElement("div", { style: { width: 24, height: 24, borderRadius: "50%", background: grad, display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Bebas Neue',sans-serif", fontSize: 12, color: "#fff", flexShrink: 0 } }, p.name.charAt(0).toUpperCase()),
+            React.createElement("div", { style: { minWidth: 0 } },
+              React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 12, letterSpacing: 0.5, lineHeight: 1, whiteSpace: "nowrap", overflow: "hidden", textOverflow: "ellipsis" } }, p.name),
+              React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 11, color: netColor, lineHeight: 1, marginTop: 1 } }, (net > 0 ? "+" : "") + net)
+            )
+          ),
+          ...cells
+        );
+      });
+
+      return React.createElement("div", { style: { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(192,132,252,0.18)", borderRadius: 14, padding: "10px 8px 8px" } },
+        headerRow,
+        ...playerRows,
+        lastAction ? React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8, paddingTop: 4, borderTop: "1px solid rgba(255,255,255,0.06)", marginTop: 2 } },
           React.createElement("span", { style: { fontSize: 11, color: "rgba(255,255,255,0.28)" } },
             "Last: " + lastAction.playerName + " · " + ((ALL_STATS.find(s => s.key === lastAction.key) || {}).icon || "") + " " + lastAction.key
           ),
@@ -320,8 +333,8 @@
           ...sorted.map((p, i) => {
             const st = getStats(p);
             const net = netScore(st.pos, st.err);
-            const netColor = net > 0 ? GREEN : net < 0 ? "#e63946" : "rgba(255,255,255,0.3)";
-            return React.createElement("div", { key: p.id, style: { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 10, padding: "10px 12px" } },
+            const netColor = net > 0 ? GREEN : net < 0 ? "#f87171" : "rgba(255,255,255,0.3)";
+            return React.createElement("div", { key: p.id, style: { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(192,132,252,0.15)", borderRadius: 10, padding: "10px 12px" } },
               React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 6 } },
                 React.createElement("span", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 13, color: "rgba(255,255,255,0.25)", minWidth: 18 } }, "#" + (i + 1)),
                 React.createElement("span", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 15, letterSpacing: 1, flex: 1 } }, p.name),
@@ -408,8 +421,8 @@
           ...sorted.map((p, i) => {
             const metric = getMetric(p);
             const trend = getTrend(p);
-            const mColor = filterKey === "net" ? (metric >= 0 ? GREEN : "#e63946") : filterColor;
-            return React.createElement("div", { key: p.name, style: { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "11px 13px" } },
+            const mColor = filterKey === "net" ? (metric >= 0 ? GREEN : "#f87171") : filterColor;
+            return React.createElement("div", { key: p.name, style: { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(192,132,252,0.15)", borderRadius: 12, padding: "11px 13px" } },
               React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 8, marginBottom: 6 } },
                 React.createElement("span", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 14, color: i === 0 ? ACCENT : "rgba(255,255,255,0.25)", minWidth: 20 } }, "#" + (i + 1)),
                 React.createElement("span", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 15, letterSpacing: 1, flex: 1 } }, p.name),
@@ -442,8 +455,8 @@
           const totPos = game.players.reduce((acc, p) => { const gp = sumSetPos(p.sets); POSITIVES.forEach(t => acc[t.key] = (acc[t.key] || 0) + gp[t.key]); return acc; }, {});
           const totErr = game.players.reduce((acc, p) => { const ge = sumSetErr(p.sets); ERRORS.forEach(t => acc[t.key] = (acc[t.key] || 0) + ge[t.key]); return acc; }, {});
           const net = netScore(totPos, totErr);
-          const netColor = net >= 0 ? GREEN : "#e63946";
-          return React.createElement("div", { key: game.id, onClick: () => onSelect(game), onMouseEnter: e => e.currentTarget.style.background = "rgba(255,255,255,0.07)", onMouseLeave: e => e.currentTarget.style.background = "rgba(255,255,255,0.04)", style: { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(255,255,255,0.08)", borderRadius: 12, padding: "12px 14px", cursor: "pointer", transition: "background 0.12s" } },
+          const netColor = net >= 0 ? GREEN : "#f87171";
+          return React.createElement("div", { key: game.id, onClick: () => onSelect(game), onMouseEnter: e => e.currentTarget.style.background = "rgba(192,132,252,0.1)", onMouseLeave: e => e.currentTarget.style.background = "rgba(255,255,255,0.04)", style: { background: "rgba(255,255,255,0.04)", border: "1px solid rgba(192,132,252,0.18)", borderRadius: 12, padding: "12px 14px", cursor: "pointer", transition: "background 0.12s" } },
             React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between" } },
               React.createElement("div", null,
                 React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 17, letterSpacing: 1.5 } }, game.label),
@@ -590,16 +603,16 @@
         { key: "games",   label: "Games (" + games.length + ")" },
       ];
 
-      if (loading) return React.createElement("div", { style: { minHeight: "100vh", background: "#0d1b2a", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: 3, color: "rgba(255,255,255,0.3)" } }, "LOADING…");
+      if (loading) return React.createElement("div", { style: { minHeight: "100vh", background: "#1e0a3c", display: "flex", alignItems: "center", justifyContent: "center", fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, letterSpacing: 3, color: "rgba(255,255,255,0.3)" } }, "LOADING…");
 
       return React.createElement("div", { style: { minHeight: "100vh", background: BG, fontFamily: "'DM Sans',sans-serif", color: "#fff", paddingBottom: 60 } },
-        toast ? React.createElement("div", { style: { position: "fixed", top: 65, left: "50%", transform: "translateX(-50%)", background: GREEN, color: "#0d1b2a", borderRadius: 10, padding: "9px 18px", fontWeight: 700, fontSize: 13, zIndex: 999, boxShadow: "0 4px 18px rgba(0,0,0,0.4)", whiteSpace: "nowrap" } }, toast) : null,
+        toast ? React.createElement("div", { style: { position: "fixed", top: 65, left: "50%", transform: "translateX(-50%)", background: "linear-gradient(90deg,#c084fc,#818cf8)", color: "#fff", borderRadius: 10, padding: "9px 18px", fontWeight: 700, fontSize: 13, zIndex: 999, boxShadow: "0 4px 18px rgba(192,132,252,0.5)", whiteSpace: "nowrap" } }, toast) : null,
         React.createElement(ConfirmModal, { modal: confirmModal, onConfirm: () => { confirmModal.onConfirm(); setConfirmModal(null); }, onCancel: () => setConfirmModal(null) }),
         React.createElement(SaveModal, { open: saveOpen, gamesCount: games.length, setsPlayed, setSetsPlayed, gameLabel, setGameLabel, gameDate, setGameDate, onSave: saveGame, onClose: () => setSaveOpen(false) }),
         React.createElement(GameDetailModal, { game: selectedGame, onClose: () => setSelectedGame(null), onDelete: () => deleteGame(selectedGame.id) }),
 
         // Header
-        React.createElement("div", { style: { background: "rgba(0,0,0,0.35)", backdropFilter: "blur(12px)", borderBottom: "1px solid rgba(255,255,255,0.08)", padding: "12px 14px", position: "sticky", top: 0, zIndex: 100 } },
+        React.createElement("div", { style: { background: "rgba(30,10,60,0.85)", backdropFilter: "blur(12px)", borderBottom: "1px solid rgba(192,132,252,0.25)", padding: "12px 14px", position: "sticky", top: 0, zIndex: 100 } },
           React.createElement("div", { style: { maxWidth: 700, margin: "0 auto" } },
             React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "space-between", marginBottom: 10 } },
               React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, letterSpacing: 3, color: ACCENT, lineHeight: 1 } }, "🏐 VB TRACKER"),
@@ -634,7 +647,7 @@
               React.createElement("div", { style: { display: "flex", gap: 6, marginBottom: 14, alignItems: "center" } },
                 React.createElement("span", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 10, letterSpacing: 2, color: "rgba(255,255,255,0.3)", marginRight: 2 } }, "SET"),
                 ...SETS.map(n => React.createElement("button", { key: n, onClick: () => setCurrentSet(n), style: { width: 38, height: 34, background: currentSet === n ? ACCENT : "rgba(255,255,255,0.06)", border: "1px solid " + (currentSet === n ? ACCENT : "rgba(255,255,255,0.12)"), borderRadius: 7, color: currentSet === n ? "#1a1a2e" : "rgba(255,255,255,0.45)", fontFamily: "'Bebas Neue',sans-serif", fontSize: 16 } }, n)),
-                hasData ? React.createElement("button", { onClick: resetCurrent, style: { marginLeft: "auto", background: "transparent", border: "1px solid rgba(230,57,70,0.3)", borderRadius: 7, color: "rgba(230,57,70,0.55)", fontSize: 11, padding: "5px 10px", fontFamily: "'DM Sans',sans-serif" } }, "Reset") : null
+                hasData ? React.createElement("button", { onClick: resetCurrent, style: { marginLeft: "auto", background: "transparent", border: "1px solid rgba(248,113,113,0.35)", borderRadius: 7, color: "rgba(248,113,113,0.65)", fontSize: 11, padding: "5px 10px", fontFamily: "'DM Sans',sans-serif" } }, "Reset") : null
               ),
               React.createElement(QuickLog, { players, currentSet, onLog: handleLog, onUndo: handleUndo, lastAction })
             )
