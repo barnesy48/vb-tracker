@@ -379,7 +379,7 @@
     }
 
     // ── Quick-Log grid ─────────────────────────────────────────────────────────
-    function QuickLog({ players, currentSet, onLog, onUndo, lastAction }) {
+    function QuickLog({ players, currentSet, onLog, onUndo, lastAction, undoCount }) {
       const isPos  = (key) => POSITIVES.some(p => p.key === key) || key === "attempts";
       const isNeutral = (key) => key === "attempts";
 
@@ -448,9 +448,11 @@
         ...playerRows,
         lastAction ? React.createElement("div", { style: { display: "flex", alignItems: "center", justifyContent: "flex-end", gap: 8, paddingTop: 4, borderTop: "1px solid rgba(0,0,0,0.06)", marginTop: 2 } },
           React.createElement("span", { style: { fontSize: 11, color: "rgba(0,0,0,0.3)" } },
-            "Last: " + lastAction.playerName + " · " + ((ALL_STATS.find(s => s.key === lastAction.key) || {}).icon || "") + " " + lastAction.key
+            "Last: " + lastAction.playerName + " · " + ((ALL_STATS.find(s => s.key === lastAction.key) || {}).icon || "")
           ),
-          React.createElement("button", { onClick: onUndo, style: { background: "transparent", border: "1px solid rgba(0,0,0,0.15)", borderRadius: 6, color: "rgba(0,0,0,0.45)", fontSize: 11, padding: "4px 10px", fontFamily: "'DM Sans',sans-serif" } }, "↩ Undo")
+          React.createElement("button", { onClick: onUndo, style: { background: "transparent", border: "1px solid rgba(0,0,0,0.15)", borderRadius: 6, color: "rgba(0,0,0,0.45)", fontSize: 11, padding: "4px 10px", fontFamily: "'DM Sans',sans-serif" } },
+            "↩ Undo" + (undoCount > 1 ? " (" + undoCount + ")" : "")
+          )
         ) : null
       );
     }
@@ -1030,7 +1032,7 @@
       const [toast,        setToast]        = useState(null);
       const [confirmModal, setConfirmModal] = useState(null);
       const [selectedGame, setSelectedGame] = useState(null);
-      const [lastAction,   setLastAction]   = useState(null);
+      const [actionHistory, setActionHistory] = useState([]); // stack, newest first
       const [rosterOpen,   setRosterOpen]   = useState(false);
       // Score + lineup state
       const [scoreUs,      setScoreUs]      = useState(0);
@@ -1097,7 +1099,7 @@
 
       const handleLog = (playerId, key) => {
         const p = players.find(x => x.id === playerId);
-        setLastAction({ playerId, key, playerName: p && p.name, set: currentSet });
+        setActionHistory(prev => [{ playerId, key, playerName: p && p.name, set: currentSet }, ...prev]);
         applyLog(playerId, key);
         // After a dig, pop up pass rating modal
         if (key === "digs") {
@@ -1112,8 +1114,8 @@
       };
 
       const handleUndo = () => {
-        if (!lastAction) return;
-        const { playerId, key, set } = lastAction;
+        if (!actionHistory.length) return;
+        const { playerId, key, set } = actionHistory[0];
         const bucket = isPos(key) ? "pos" : "err";
         setPlayers(prev => prev.map(pl => {
           if (pl.id !== playerId) return pl;
@@ -1127,7 +1129,7 @@
           return Object.assign({}, pl, { sets: Object.assign({}, pl.sets, { [set]: Object.assign({}, curSet, { [bucket]: curBucket }) }) });
         }));
         setPassModal(null);
-        setLastAction(null);
+        setActionHistory(prev => prev.slice(1));
       };
 
       const hasData = players.some(p => {
@@ -1145,7 +1147,7 @@
 
       const resetCurrent = () => confirm("Reset all current stats? This can't be undone.", () => {
         setPlayers(prev => prev.map(p => newPlayer(p.name)));
-        setCurrentSet(1); setLastAction(null);
+        setCurrentSet(1); setActionHistory([]);
         setScoreUs(0); setScoreThem(0); setScoreLog([]); setLineup([]);
       });
 
@@ -1157,7 +1159,7 @@
         const newGames = [...games, { id: Date.now(), label, date, setsPlayed, players: snap, scoreUs, scoreThem, scoreLog: JSON.parse(JSON.stringify(scoreLog)) }];
         setGames(newGames); persist("vb-games-v2", newGames);
         setPlayers(prev => prev.map(p => newPlayer(p.name)));
-        setCurrentSet(1); setLastAction(null);
+        setCurrentSet(1); setActionHistory([]);
         setScoreUs(0); setScoreThem(0); setScoreLog([]); setLineup([]);
         setSaveOpen(false); setGameLabel(""); setGameDate(""); setSetsPlayed(3);
         showToast("✓ \"" + label + "\" saved");
@@ -1240,7 +1242,7 @@
                   if (aOn !== bOn) return aOn ? -1 : 1;
                   return a.name.localeCompare(b.name);
                 }),
-                currentSet, onLog: handleLog, onUndo: handleUndo, lastAction
+                currentSet, onLog: handleLog, onUndo: handleUndo, lastAction: actionHistory[0] || null, undoCount: actionHistory.length
               })
             )
           ) : null,
