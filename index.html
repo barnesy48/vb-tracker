@@ -316,7 +316,9 @@
       ];
       return React.createElement("div", {
         style: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", zIndex: 800, display: "flex", alignItems: "flex-end", justifyContent: "center", padding: "0 0 24px" },
-        onClick: onSkip
+        onClick: onSkip,
+        onTouchStart: e => e.stopPropagation(),
+        onTouchEnd: e => e.stopPropagation(),
       },
         React.createElement("div", {
           style: { background: "#fff", border: "1px solid rgba(0,0,0,0.15)", borderRadius: 16, padding: "16px 16px 12px", width: "100%", maxWidth: 380, boxShadow: "0 -4px 24px rgba(0,0,0,0.12)" },
@@ -331,7 +333,7 @@
           React.createElement("div", { style: { display: "grid", gridTemplateColumns: "repeat(4,1fr)", gap: 8 } },
             ...ratings.map(r => React.createElement("button", {
               key: r.v,
-              onClick: () => onRate(r.v),
+              onClick: e => { e.stopPropagation(); onRate(r.v); },
               style: {
                 background: r.color + "12", border: "2px solid " + r.color,
                 borderRadius: 12, padding: "12px 4px", textAlign: "center",
@@ -379,10 +381,50 @@
       );
     }
 
+    // ── Edit Stat Modal ───────────────────────────────────────────────────────
+    function EditStatModal({ modal, onSave, onClose }) {
+      const [val, setVal] = React.useState("");
+      React.useEffect(() => { if (modal) setVal(String(modal.current)); }, [modal]);
+      if (!modal) return null;
+      const stat = ALL_STATS.find(s => s.key === modal.key) || {};
+      const handleSave = () => {
+        const n = parseInt(val, 10);
+        if (!isNaN(n) && n >= 0) onSave(modal.playerId, modal.key, n);
+        onClose();
+      };
+      return React.createElement("div", {
+        style: { position: "fixed", inset: 0, background: "rgba(0,0,0,0.65)", zIndex: 800, display: "flex", alignItems: "center", justifyContent: "center", padding: 24 },
+        onClick: onClose
+      },
+        React.createElement("div", {
+          style: { background: "#fff", borderRadius: 16, padding: 24, width: "100%", maxWidth: 300, boxShadow: "0 8px 32px rgba(0,0,0,0.18)" },
+          onClick: e => e.stopPropagation()
+        },
+          React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 11, letterSpacing: 2, color: "rgba(0,0,0,0.35)", marginBottom: 4 } }, "EDIT STAT"),
+          React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 20, color: stat.color || "#111", marginBottom: 14 } },
+            modal.playerName + " · " + (stat.icon || modal.key)
+          ),
+          React.createElement("input", {
+            type: "number", min: "0", value: val,
+            onChange: e => setVal(e.target.value),
+            onKeyDown: e => e.key === "Enter" && handleSave(),
+            autoFocus: true,
+            style: { width: "100%", background: "#f0f0f0", border: "1px solid rgba(0,0,0,0.15)", borderRadius: 10, fontSize: 28, padding: "10px 14px", fontFamily: "'Bebas Neue',sans-serif", color: "#111", textAlign: "center", marginBottom: 14 }
+          }),
+          React.createElement("div", { style: { display: "flex", gap: 8 } },
+            React.createElement("button", { onClick: onClose, style: { flex: 1, background: "transparent", border: "1px solid rgba(0,0,0,0.15)", borderRadius: 9, color: "rgba(0,0,0,0.45)", fontSize: 13, padding: 10, fontFamily: "'DM Sans',sans-serif" } }, "Cancel"),
+            React.createElement("button", { onClick: handleSave, style: { flex: 2, background: ACCENT, border: "none", borderRadius: 9, color: "#fff", fontSize: 14, fontWeight: 700, padding: 10, fontFamily: "'Bebas Neue',sans-serif", letterSpacing: 1 } }, "SAVE")
+          )
+        )
+      );
+    }
+
     // ── Quick-Log grid ─────────────────────────────────────────────────────────
-    function QuickLog({ players, currentSet, onLog, onUndo, lastAction, undoCount }) {
+    function QuickLog({ players, currentSet, onLog, onUndo, onEdit, lastAction, undoCount }) {
       const isPos  = (key) => POSITIVES.some(p => p.key === key) || key === "attempts";
       const isNeutral = (key) => key === "attempts";
+      const longPressRef = React.useRef(null);
+      const longFiredRef = React.useRef(false);
 
       const getCur = (p, key) => {
         const bucket = isPos(key) ? "pos" : "err";
@@ -411,13 +453,32 @@
           const all = getAll(p, stat.key);
           const active = cur > 0;
           const isNeu = isNeutral(stat.key);
+          const startLongPress = (e) => {
+            longFiredRef.current = false;
+            e.currentTarget.style.transform = "scale(0.88)";
+            e.currentTarget.style.background = stat.color + "55";
+            longPressRef.current = setTimeout(() => {
+              longPressRef.current = null;
+              longFiredRef.current = true;
+              onEdit(p.id, stat.key, cur, p.name);
+            }, 600);
+          };
+          const cancelLongPress = (e) => {
+            e.currentTarget.style.transform = "scale(1)";
+            if (longPressRef.current) { clearTimeout(longPressRef.current); longPressRef.current = null; }
+          };
+          const handleClick = () => {
+            if (longFiredRef.current) { longFiredRef.current = false; return; }
+            onLog(p.id, stat.key);
+          };
           return React.createElement("button", {
             key: stat.key,
-            onClick: () => onLog(p.id, stat.key),
-            onMouseDown: e => { e.currentTarget.style.transform = "scale(0.88)"; e.currentTarget.style.background = stat.color + "55"; },
-            onMouseUp:   e => { e.currentTarget.style.transform = "scale(1)"; },
-            onTouchStart:e => { e.currentTarget.style.transform = "scale(0.88)"; e.currentTarget.style.background = stat.color + "55"; },
-            onTouchEnd:  e => { e.currentTarget.style.transform = "scale(1)"; },
+            onClick: handleClick,
+            onMouseDown: startLongPress,
+            onMouseUp:   cancelLongPress,
+            onMouseLeave:cancelLongPress,
+            onTouchStart:startLongPress,
+            onTouchEnd:  cancelLongPress,
             style: {
               background: active ? stat.color + (isNeu ? "15" : "18") : "rgba(0,0,0,0.03)",
               border: "1px solid " + (active ? stat.color + "99" : isNeu ? stat.color + "30" : "rgba(0,0,0,0.08)"),
@@ -948,32 +1009,29 @@
 
     // ── Score Bar (Us / Them + lineup toggle) ─────────────────────────────────
     function ScoreBar({ scoreUs, scoreThem, onScore, lineupOpen, setLineupOpen }) {
+      const btnBase = { height: 36, borderRadius: 8, fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0, border: "none" };
       return React.createElement("div", {
-        style: { background: "#fff", border: "1px solid rgba(0,0,0,0.15)", borderRadius: 14, padding: "10px 12px", boxShadow: "0 2px 12px rgba(0,0,0,0.06)", marginBottom: 10, display: "flex", alignItems: "center", gap: 10 }
+        style: { background: "#fff", border: "1px solid rgba(0,0,0,0.15)", borderRadius: 14, padding: "8px 10px", boxShadow: "0 2px 12px rgba(0,0,0,0.06)", marginBottom: 10, display: "flex", alignItems: "center", gap: 6 }
       },
-        // US score
-        React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 6, flex: 1 } },
-          React.createElement("button", {
-            onClick: () => onScore("us"),
-            style: { width: 44, height: 44, borderRadius: 10, background: GREEN + "18", border: "2px solid " + GREEN, color: GREEN, fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }
-          }, "+"),
+        // US side: − score +
+        React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 4, flex: 1 } },
+          React.createElement("button", { onClick: () => onScore("us", -1), style: Object.assign({}, btnBase, { width: 32, background: "rgba(0,0,0,0.05)", color: "rgba(0,0,0,0.35)", fontSize: 16 }) }, "−"),
           React.createElement("div", { style: { textAlign: "center", flex: 1 } },
             React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 32, lineHeight: 1, color: GREEN } }, scoreUs),
             React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 8, letterSpacing: 1.5, color: "rgba(0,0,0,0.3)", marginTop: 1 } }, "US")
-          )
+          ),
+          React.createElement("button", { onClick: () => onScore("us", 1), style: Object.assign({}, btnBase, { width: 38, background: GREEN + "18", border: "2px solid " + GREEN, color: GREEN, fontSize: 22 }) }, "+")
         ),
         // Divider
-        React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, color: "rgba(0,0,0,0.2)" } }, ":"),
-        // THEM score
-        React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 6, flex: 1, flexDirection: "row-reverse" } },
-          React.createElement("button", {
-            onClick: () => onScore("them"),
-            style: { width: 44, height: 44, borderRadius: 10, background: ERR_COLOR + "12", border: "2px solid " + ERR_COLOR, color: ERR_COLOR, fontFamily: "'Bebas Neue',sans-serif", fontSize: 22, display: "flex", alignItems: "center", justifyContent: "center", flexShrink: 0 }
-          }, "+"),
+        React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 18, color: "rgba(0,0,0,0.2)", flexShrink: 0 } }, ":"),
+        // THEM side: + score −
+        React.createElement("div", { style: { display: "flex", alignItems: "center", gap: 4, flex: 1, flexDirection: "row-reverse" } },
+          React.createElement("button", { onClick: () => onScore("them", -1), style: Object.assign({}, btnBase, { width: 32, background: "rgba(0,0,0,0.05)", color: "rgba(0,0,0,0.35)", fontSize: 16 }) }, "−"),
           React.createElement("div", { style: { textAlign: "center", flex: 1 } },
             React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 32, lineHeight: 1, color: ERR_COLOR } }, scoreThem),
             React.createElement("div", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 8, letterSpacing: 1.5, color: "rgba(0,0,0,0.3)", marginTop: 1 } }, "THEM")
-          )
+          ),
+          React.createElement("button", { onClick: () => onScore("them", 1), style: Object.assign({}, btnBase, { width: 38, background: ERR_COLOR + "12", border: "2px solid " + ERR_COLOR, color: ERR_COLOR, fontSize: 22 }) }, "+")
         ),
         // Lineup toggle
         React.createElement("button", {
@@ -1112,6 +1170,7 @@
       const [lineupOpen,   setLineupOpen]   = useState(false);
       // Pass rating modal
       const [passModal,    setPassModal]    = useState(null); // { playerId, playerName, set }
+      const [editModal,    setEditModal]    = useState(null); // { playerId, playerName, key, current }
       const [helpOpen,     setHelpOpen]     = useState(false);
 
       const newPlayer = (name) => ({ id: name, name, sets: emptySetStat() });
@@ -1183,6 +1242,21 @@
         setPassModal(null);
       };
 
+      const handleEdit = (playerId, key, current, playerName) => {
+        setEditModal({ playerId, key, current, playerName });
+      };
+
+      const handleEditSave = (playerId, key, newVal) => {
+        const bucket = isPos(key) ? "pos" : "err";
+        setPlayers(prev => prev.map(pl => {
+          if (pl.id !== playerId) return pl;
+          const curSet = pl.sets[currentSet] || { pos: emptyPos(), err: emptyErr() };
+          const curBucket = Object.assign({}, curSet[bucket] || (bucket === "pos" ? emptyPos() : emptyErr()));
+          curBucket[key] = newVal;
+          return Object.assign({}, pl, { sets: Object.assign({}, pl.sets, { [currentSet]: Object.assign({}, curSet, { [bucket]: curBucket }) }) });
+        }));
+      };
+
       const handleUndo = () => {
         if (!actionHistory.length) return;
         const { playerId, key, set } = actionHistory[0];
@@ -1207,12 +1281,23 @@
         return sumPos(pos) > 0 || sumErr(err) > 0;
       });
 
-      const handleScore = (side) => {
-        const newUs   = side === "us"   ? scoreUs   + 1 : scoreUs;
-        const newThem = side === "them" ? scoreThem + 1 : scoreThem;
+      const handleScore = (side, delta = 1) => {
+        const newUs   = side === "us"   ? Math.max(0, scoreUs   + delta) : scoreUs;
+        const newThem = side === "them" ? Math.max(0, scoreThem + delta) : scoreThem;
         setScoreUs(newUs);
         setScoreThem(newThem);
-        setScoreLog(prev => [...prev, { set: currentSet, scoreUs: newUs, scoreThem: newThem, lineup: [...lineup], server: serving }]);
+        // Only log to scoreLog on increments (not decrements — decrements are corrections)
+        if (delta > 0) {
+          setScoreLog(prev => [...prev, { set: currentSet, scoreUs: newUs, scoreThem: newThem, lineup: [...lineup], server: serving }]);
+        } else {
+          // Remove the last score log entry for this set on decrement
+          setScoreLog(prev => {
+            const idx = [...prev].reverse().findIndex(e => e.set === currentSet);
+            if (idx === -1) return prev;
+            const realIdx = prev.length - 1 - idx;
+            return prev.filter((_, i) => i !== realIdx);
+          });
+        }
       };
 
       const resetCurrent = () => confirm("Reset all current stats? This can't be undone.", () => {
@@ -1258,6 +1343,7 @@
         toast ? React.createElement("div", { style: { position: "fixed", top: 65, left: "50%", transform: "translateX(-50%)", background: "#111", color: "#fff", borderRadius: 10, padding: "9px 18px", fontWeight: 700, fontSize: 13, zIndex: 999, boxShadow: "0 4px 18px rgba(0,0,0,0.3)", whiteSpace: "nowrap" } }, toast) : null,
         React.createElement(ConfirmModal, { modal: confirmModal, onConfirm: () => { confirmModal.onConfirm(); setConfirmModal(null); }, onCancel: () => setConfirmModal(null) }),
         React.createElement(PassRatingModal, { open: !!passModal, playerName: passModal && passModal.playerName, onRate: handlePassRate, onSkip: () => setPassModal(null) }),
+        React.createElement(EditStatModal, { modal: editModal, onSave: handleEditSave, onClose: () => setEditModal(null) }),
         React.createElement(HelpModal, { open: helpOpen, onClose: () => setHelpOpen(false) }),
         React.createElement(SaveModal, { open: saveOpen, gamesCount: games.length, setsPlayed, setSetsPlayed, gameLabel, setGameLabel, gameDate, setGameDate, onSave: saveGame, onClose: () => setSaveOpen(false) }),
         React.createElement(GameDetailModal, { game: selectedGame, onClose: () => setSelectedGame(null), onDelete: () => deleteGame(selectedGame.id) }),
@@ -1310,7 +1396,7 @@
               // Set selector
               React.createElement("div", { style: { display: "flex", gap: 6, marginBottom: 14, alignItems: "center" } },
                 React.createElement("span", { style: { fontFamily: "'Bebas Neue',sans-serif", fontSize: 10, letterSpacing: 2, color: "rgba(0,0,0,0.35)", marginRight: 2 } }, "SET"),
-                ...SETS.map(n => React.createElement("button", { key: n, onClick: () => setCurrentSet(n), style: { width: 38, height: 34, background: currentSet === n ? ACCENT : "#fff", border: "1px solid " + (currentSet === n ? ACCENT : "rgba(0,0,0,0.12)"), borderRadius: 7, color: currentSet === n ? "#fff" : "rgba(0,0,0,0.45)", fontFamily: "'Bebas Neue',sans-serif", fontSize: 16 } }, n)),
+                ...SETS.map(n => React.createElement("button", { key: n, onClick: () => { if (n !== currentSet) { setCurrentSet(n); setScoreUs(0); setScoreThem(0); } }, style: { width: 38, height: 34, background: currentSet === n ? ACCENT : "#fff", border: "1px solid " + (currentSet === n ? ACCENT : "rgba(0,0,0,0.12)"), borderRadius: 7, color: currentSet === n ? "#fff" : "rgba(0,0,0,0.45)", fontFamily: "'Bebas Neue',sans-serif", fontSize: 16 } }, n)),
                 hasData ? React.createElement("button", { onClick: resetCurrent, style: { marginLeft: "auto", background: "transparent", border: "1px solid rgba(220,38,38,0.3)", borderRadius: 7, color: "rgba(220,38,38,0.65)", fontSize: 11, padding: "5px 10px", fontFamily: "'DM Sans',sans-serif" } }, "Reset") : null
               ),
               React.createElement(QuickLog, {
@@ -1319,7 +1405,7 @@
                   if (aOn !== bOn) return aOn ? -1 : 1;
                   return a.name.localeCompare(b.name);
                 }),
-                currentSet, onLog: handleLog, onUndo: handleUndo, lastAction: actionHistory[0] || null, undoCount: actionHistory.length
+                currentSet, onLog: handleLog, onUndo: handleUndo, onEdit: handleEdit, lastAction: actionHistory[0] || null, undoCount: actionHistory.length
               })
             )
           ) : null,
